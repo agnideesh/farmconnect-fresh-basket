@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, User, Search } from 'lucide-react';
 import AnimatedButton from '../UI/AnimatedButton';
@@ -44,9 +43,9 @@ const Navbar: React.FC = () => {
         <Link to="/" className="flex items-center gap-2">
           <div className="relative w-8 h-8 md:w-10 md:h-10">
             <div className="absolute inset-0 bg-primary rounded-full opacity-20 animate-pulse-subtle"></div>
-            <div className="absolute inset-0 flex items-center justify-center text-primary font-semibold text-lg md:text-xl">FC</div>
+            <div className="absolute inset-0 flex items-center justify-center text-primary font-semibold text-lg md:text-xl">A2T</div>
           </div>
-          <span className="text-xl md:text-2xl font-semibold">FarmConnect</span>
+          <span className="text-xl md:text-2xl font-semibold">Agree2Table</span>
         </Link>
 
         {/* Desktop Navigation */}
