@@ -13,6 +13,7 @@ interface Profile {
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
+  loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (data: { email: string; password: string; options?: { data: { full_name: string; user_type: 'user' | 'farmer' } } }) => Promise<void>;
   signOut: () => Promise<void>;
@@ -31,6 +32,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
     });
 
@@ -40,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchProfile(session.user.id);
       } else {
         setProfile(null);
+        setLoading(false);
       }
     });
 
@@ -55,9 +59,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
         
       if (error) throw error;
-      setProfile(data);
+      
+      // Ensure the user_type is correctly typed as 'user' | 'farmer'
+      if (data && (data.user_type === 'user' || data.user_type === 'farmer')) {
+        setProfile(data as Profile);
+      } else {
+        console.error('Invalid user_type in profile:', data?.user_type);
+        setProfile(null);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      setProfile(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,8 +109,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, signIn, signUp, signOut }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut }}>
+      {children}
     </AuthContext.Provider>
   );
 };

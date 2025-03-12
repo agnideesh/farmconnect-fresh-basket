@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
-import AuthProvider from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
