@@ -1,12 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ShoppingCart, User, Search } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, Search, LogOut } from 'lucide-react';
 import AnimatedButton from '../UI/AnimatedButton';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, signOut, profile } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +25,23 @@ const Navbar: React.FC = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  const handleSignIn = () => {
+    navigate('/auth');
+  };
+
+  const handleDashboard = () => {
+    if (profile?.user_type === 'farmer') {
+      navigate('/farmer-dashboard');
+    } else {
+      navigate('/user-dashboard');
+    }
   };
 
   const navLinks = [
@@ -66,16 +87,57 @@ const Navbar: React.FC = () => {
           <button className="p-2 hover:bg-secondary rounded-full transition-colors duration-200">
             <Search className="w-5 h-5" />
           </button>
-          <button className="p-2 hover:bg-secondary rounded-full transition-colors duration-200">
-            <User className="w-5 h-5" />
-          </button>
+          
+          {user ? (
+            <div className="relative group">
+              <button 
+                className="p-2 hover:bg-secondary rounded-full transition-colors duration-200"
+                onClick={handleDashboard}
+              >
+                <User className="w-5 h-5" />
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-black rounded-md shadow-lg overflow-hidden z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="p-3 border-b border-border">
+                  <p className="font-medium truncate">{profile?.full_name}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{profile?.user_type}</p>
+                </div>
+                <div className="p-2">
+                  <button 
+                    onClick={handleDashboard}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-secondary rounded-md transition-colors"
+                  >
+                    Dashboard
+                  </button>
+                  <button 
+                    onClick={handleSignOut}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-secondary rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button 
+              className="p-2 hover:bg-secondary rounded-full transition-colors duration-200"
+              onClick={handleDashboard}
+            >
+              <User className="w-5 h-5" />
+            </button>
+          )}
+          
           <button className="p-2 hover:bg-secondary rounded-full transition-colors duration-200 relative">
             <ShoppingCart className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
               0
             </span>
           </button>
-          <AnimatedButton size="sm">Sign In</AnimatedButton>
+          
+          {user ? (
+            <AnimatedButton size="sm" onClick={handleSignOut}>Sign Out</AnimatedButton>
+          ) : (
+            <AnimatedButton size="sm" onClick={handleSignIn}>Sign In</AnimatedButton>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -117,9 +179,41 @@ const Navbar: React.FC = () => {
           </nav>
           
           <div className="mt-8 space-y-4">
-            <AnimatedButton fullWidth size="lg">
-              Sign In
-            </AnimatedButton>
+            {user ? (
+              <>
+                <div className="p-4 bg-secondary/50 rounded-lg mb-4">
+                  <p className="font-medium">{profile?.full_name}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{profile?.user_type}</p>
+                </div>
+                <AnimatedButton
+                  fullWidth
+                  size="lg"
+                  onClick={handleDashboard}
+                >
+                  Dashboard
+                </AnimatedButton>
+                <AnimatedButton
+                  variant="outline"
+                  fullWidth
+                  size="lg"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </AnimatedButton>
+              </>
+            ) : (
+              <AnimatedButton
+                fullWidth
+                size="lg"
+                onClick={() => {
+                  navigate('/auth');
+                  setIsMenuOpen(false);
+                }}
+              >
+                Sign In
+              </AnimatedButton>
+            )}
+            
             <div className="flex justify-center gap-4 py-4">
               <button className="p-3 hover:bg-secondary rounded-full transition-colors duration-200">
                 <Search className="w-6 h-6" />
