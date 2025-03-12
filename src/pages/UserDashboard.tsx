@@ -5,16 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import AnimatedButton from '@/components/UI/AnimatedButton';
-import { ShoppingBag, Heart, Settings, LogOut } from 'lucide-react';
+import { ShoppingBag, Heart, Settings } from 'lucide-react';
 
 const UserDashboard = () => {
-  const { signOut, profile } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -58,15 +53,6 @@ const UserDashboard = () => {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-3">Manage your account settings</p>
-              <AnimatedButton 
-                variant="outline" 
-                size="sm"
-                onClick={handleSignOut}
-                icon={<LogOut className="w-4 h-4" />}
-                iconPosition="left"
-              >
-                Sign Out
-              </AnimatedButton>
             </div>
           </div>
           
