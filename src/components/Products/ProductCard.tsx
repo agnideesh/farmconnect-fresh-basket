@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, ShoppingCart, Heart, Phone, Mail, MapPin } from 'lucide-react';
+import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import {
@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import FarmerLocationMap from '../Map/FarmerLocationMap';
 
 export interface Product {
   id: string;
@@ -23,6 +24,10 @@ export interface Product {
     phone?: string;
     email?: string;
     avatar?: string;
+    coordinates?: {
+      latitude: number;
+      longitude: number;
+    };
   };
   image: string;
   distance?: number; // in km
@@ -39,6 +44,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
   const [isHovered, setIsHovered] = useState(false);
   const [showFarmerDetails, setShowFarmerDetails] = useState(false);
   
+  const defaultCoordinates = {
+    latitude: 12.9716,
+    longitude: 77.5946, // Bangalore coordinates as default
+  };
+
+  const farmerCoordinates = product.farmer.coordinates || defaultCoordinates;
+  
   if (view === 'list') {
     return (
       <>
@@ -46,7 +58,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           className="group relative bg-white dark:bg-black/20 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex"
           onClick={() => setShowFarmerDetails(true)}
         >
-          {/* Product image */}
           <div className="relative h-auto w-24 sm:w-36 aspect-square shrink-0">
             <img 
               src={product.image} 
@@ -54,7 +65,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               className="w-full h-full object-cover"
             />
             
-            {/* Badges */}
             <div className="absolute top-1 left-1 flex flex-col gap-1">
               {product.organic && (
                 <span className="bg-green-100 text-green-800 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
@@ -69,7 +79,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             </div>
           </div>
           
-          {/* Product info */}
           <div className="p-3 flex flex-col justify-between flex-1">
             <div>
               <span className="text-xs text-muted-foreground capitalize">{product.category}</span>
@@ -131,9 +140,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           </div>
         </div>
         
-        {/* Farmer Details Dialog - for list view */}
         <Dialog open={showFarmerDetails} onOpenChange={setShowFarmerDetails}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Farmer Details</DialogTitle>
               <DialogDescription>
@@ -169,6 +177,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 )}
               </div>
               
+              <div className="mt-4">
+                <h4 className="font-medium mb-2 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Farm Location
+                </h4>
+                <FarmerLocationMap 
+                  location={farmerCoordinates}
+                  farmerName={product.farmer.name}
+                />
+                <div className="flex justify-between mt-2">
+                  <span className="text-xs text-muted-foreground">{product.farmer.location}</span>
+                  {product.distance && (
+                    <span className="text-xs flex items-center gap-1">
+                      <Navigation className="h-3 w-3" />
+                      {product.distance} km away
+                    </span>
+                  )}
+                </div>
+              </div>
+              
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">About this product</h4>
                 <p className="text-sm">{product.name} - ₹{product.price.toFixed(2)}/kg</p>
@@ -182,7 +210,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
     );
   }
   
-  // Grid view (default)
   return (
     <>
       <div 
@@ -190,7 +217,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Product image - clickable to show farmer details */}
         <div 
           className="relative aspect-square overflow-hidden cursor-pointer"
           onClick={() => setShowFarmerDetails(true)}
@@ -204,7 +230,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             )}
           />
           
-          {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {product.organic && (
               <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">
@@ -218,7 +243,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             )}
           </div>
           
-          {/* Quick action buttons */}
           <div 
             className={cn(
               "absolute right-3 top-3 flex flex-col gap-2 transition-all duration-300",
@@ -240,7 +264,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           </div>
         </div>
         
-        {/* Product info */}
         <div className="p-4 flex-1 flex flex-col">
           <div className="mb-2">
             <span className="text-xs text-muted-foreground capitalize">{product.category}</span>
@@ -279,9 +302,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
         </div>
       </div>
 
-      {/* Farmer Details Dialog */}
       <Dialog open={showFarmerDetails} onOpenChange={setShowFarmerDetails}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Farmer Details</DialogTitle>
             <DialogDescription>
@@ -322,6 +344,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                   <span className="text-sm">{product.distance} km away</span>
                 </div>
               )}
+            </div>
+            
+            <div className="mt-4">
+              <h4 className="font-medium mb-2 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                Farm Location
+              </h4>
+              <FarmerLocationMap 
+                location={farmerCoordinates}
+                farmerName={product.farmer.name}
+              />
+              <div className="flex justify-between mt-2">
+                <span className="text-xs text-muted-foreground">{product.farmer.location}</span>
+                {product.distance && (
+                  <span className="text-xs flex items-center gap-1">
+                    <Navigation className="h-3 w-3" />
+                    {product.distance} km away
+                  </span>
+                )}
+              </div>
             </div>
             
             <div className="border-t pt-4">

@@ -20,6 +20,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProductGridProps {
   selectedCategory: string;
@@ -46,9 +47,18 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           });
+          toast({
+            title: "Location updated",
+            description: "Using your current location to find nearby farms",
+          });
         },
         (error) => {
           console.error("Error getting location:", error);
+          toast({
+            title: "Location error",
+            description: "Could not access your location. Please check permissions.",
+            variant: "destructive",
+          });
         }
       );
     }
@@ -70,7 +80,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   
   // Fetch products from Supabase
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ['products'],
+    queryKey: ['products', userLocation],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products_with_farmer_details')
@@ -78,30 +88,65 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       
       if (error) throw error;
       
-      return data.map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        price: item.price,
-        farmer: {
-          id: item.farmer_id,
-          name: item.farmer_name || 'Unknown Farmer',
-          location: 'Local Farm',
-          phone: item.farmer_phone,
-          email: item.farmer_email,
-          avatar: item.farmer_avatar
-        },
-        image: item.image_url || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-        organic: Math.random() > 0.5, // Placeholder, you can add this field to your DB
-        native: Math.random() > 0.5,  // Placeholder, you can add this field to your DB
-        distance: userLocation ? calculateDistance(
-          userLocation.latitude, 
-          userLocation.longitude, 
-          // Random coordinates near the user's location for demonstration
-          userLocation.latitude + (Math.random() * 0.1 - 0.05), 
-          userLocation.longitude + (Math.random() * 0.1 - 0.05)
-        ) : Math.floor(Math.random() * 50) + 1
-      }));
+      // Farm location coordinates for each farmer (in a real app, these would come from the database)
+      const farmerCoordinates: Record<string, {latitude: number, longitude: number}> = {
+        // Predefined farmer coordinates
+        '101': { latitude: 12.9716, longitude: 77.5946 }, // Bangalore
+        '102': { latitude: 31.1048, longitude: 77.1734 }, // Shimla
+        '103': { latitude: 9.9312, longitude: 76.2673 },  // Kochi
+        '104': { latitude: 11.0168, longitude: 76.9558 }, // Coimbatore
+        '105': { latitude: 8.5241, longitude: 76.9366 },  // Trivandrum
+        '106': { latitude: 16.9924, longitude: 73.3120 }  // Ratnagiri
+      };
+      
+      return data.map(item => {
+        // Generate random coordinates near the predefined location for each farmer
+        // In a real app, you would use actual coordinates from the database
+        const farmerId = item.farmer_id || '101'; // Default to first farmer if none
+        
+        // Get base coordinates for the farmer or use a default
+        const baseCoordinates = farmerCoordinates[farmerId] || { 
+          latitude: 12.9716, 
+          longitude: 77.5946 
+        }; 
+        
+        // Add a small random offset to make each farm location unique
+        // In a real app, you would use actual precise coordinates for each farm
+        const coordinates = {
+          latitude: baseCoordinates.latitude + (Math.random() * 0.05 - 0.025),
+          longitude: baseCoordinates.longitude + (Math.random() * 0.05 - 0.025)
+        };
+        
+        // Calculate distance if user location is available
+        const distance = userLocation 
+          ? calculateDistance(
+              userLocation.latitude, 
+              userLocation.longitude, 
+              coordinates.latitude, 
+              coordinates.longitude
+            ) 
+          : Math.floor(Math.random() * 50) + 1;
+          
+        return {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          price: item.price,
+          farmer: {
+            id: item.farmer_id || '101',
+            name: item.farmer_name || 'Unknown Farmer',
+            location: 'Local Farm',
+            phone: item.farmer_phone,
+            email: item.farmer_email,
+            avatar: item.farmer_avatar,
+            coordinates: coordinates
+          },
+          image: item.image_url || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+          organic: Math.random() > 0.5, // Placeholder, you can add this field to your DB
+          native: Math.random() > 0.5,  // Placeholder, you can add this field to your DB
+          distance: distance
+        };
+      });
     },
     enabled: true,
     refetchInterval: isLocationEnabled ? 30000 : false, // Refetch every 30 seconds if location is enabled
@@ -191,7 +236,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
       <h2 className="text-2xl font-bold">
         {selectedCategory === 'all' ? 'Featured Products' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-        <span className="text-sm font-normal text-muted-foreground ml-2">({displayProducts.length} products)</span>
+        <span className="text-sm font-normal text-muted-foreground ml-2">({filteredProducts.length} products)</span>
       </h2>
       
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -294,6 +339,70 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       )}
     </>
   );
+  
+  // Filter products based on category, search query, and sort by distance if location is enabled
+  const filteredProducts = React.useMemo(() => {
+    let filtered = (products || []).filter(product => {
+      // Filter by category
+      const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
+      
+      // Filter by search query
+      const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      return categoryMatch && searchMatch;
+    });
+
+    // Sort by distance if location is enabled
+    if (isLocationEnabled && userLocation) {
+      filtered = filtered.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
+    return filtered;
+  }, [products, selectedCategory, searchQuery, isLocationEnabled, userLocation]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <section className="py-8">
+        <div className="container px-6 mx-auto">
+          <div className="text-center py-20">
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded-full w-48 mx-auto mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded-full w-64 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <section className="py-8">
+        <div className="container px-6 mx-auto">
+          <div className="text-center py-20">
+            <h3 className="text-lg font-medium text-red-600 mb-2">Error loading products</h3>
+            <p className="text-muted-foreground">Please try again later</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Use sample data if no products are loaded yet
+  // This is a fallback in case there's no data in the database yet
+  const displayProducts = products && products.length > 0 ? filteredProducts : sampleProducts.filter(product => {
+    // Filter by category
+    const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
+    
+    // Filter by search query
+    const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return categoryMatch && searchMatch;
+  });
 
   return (
     <section className="py-8">
@@ -333,7 +442,11 @@ const sampleProducts: Product[] = [
       name: 'Anand Farms',
       location: 'Bangalore Rural',
       phone: '+91 9876543210',
-      email: 'anand@farms.com'
+      email: 'anand@farms.com',
+      coordinates: {
+        latitude: 12.9716,
+        longitude: 77.5946
+      }
     },
     image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 12,
@@ -350,7 +463,11 @@ const sampleProducts: Product[] = [
       name: 'Himachal Growers',
       location: 'Shimla',
       phone: '+91 9876543211',
-      email: 'info@himachalgrowers.com'
+      email: 'info@himachalgrowers.com',
+      coordinates: {
+        latitude: 31.1048,
+        longitude: 77.1734
+      }
     },
     image: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 45,
@@ -367,7 +484,11 @@ const sampleProducts: Product[] = [
       name: 'Kerala Herbs',
       location: 'Kochi',
       phone: '+91 9876543212',
-      email: 'contact@keralaherbs.com'
+      email: 'contact@keralaherbs.com',
+      coordinates: {
+        latitude: 9.9312,
+        longitude: 76.2673
+      }
     },
     image: 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 22,
@@ -384,7 +505,11 @@ const sampleProducts: Product[] = [
       name: 'Tamil Blooms',
       location: 'Coimbatore',
       phone: '+91 9876543213',
-      email: 'sales@tamilblooms.com'
+      email: 'sales@tamilblooms.com',
+      coordinates: {
+        latitude: 11.0168,
+        longitude: 76.9558
+      }
     },
     image: 'https://images.unsplash.com/photo-1604323990536-92b4ba30b351?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 18,
@@ -401,7 +526,11 @@ const sampleProducts: Product[] = [
       name: 'Kerala Coco',
       location: 'Trivandrum',
       phone: '+91 9876543214',
-      email: 'orders@keralacoco.com'
+      email: 'orders@keralacoco.com',
+      coordinates: {
+        latitude: 8.5241,
+        longitude: 76.9366
+      }
     },
     image: 'https://images.unsplash.com/photo-1550406827-8c9689cd4025?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 30,
@@ -418,7 +547,11 @@ const sampleProducts: Product[] = [
       name: 'Anand Farms',
       location: 'Bangalore Rural',
       phone: '+91 9876543210',
-      email: 'anand@farms.com'
+      email: 'anand@farms.com',
+      coordinates: {
+        latitude: 12.9716,
+        longitude: 77.5946
+      }
     },
     image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 12,
@@ -435,7 +568,11 @@ const sampleProducts: Product[] = [
       name: 'Ratnagiri Fruits',
       location: 'Ratnagiri',
       phone: '+91 9876543215',
-      email: 'mangoes@ratnagirifruits.com'
+      email: 'mangoes@ratnagirifruits.com',
+      coordinates: {
+        latitude: 16.9924,
+        longitude: 73.3120
+      }
     },
     image: 'https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 55,
@@ -452,7 +589,11 @@ const sampleProducts: Product[] = [
       name: 'Kerala Herbs',
       location: 'Kochi',
       phone: '+91 9876543212',
-      email: 'contact@keralaherbs.com'
+      email: 'contact@keralaherbs.com',
+      coordinates: {
+        latitude: 9.9312,
+        longitude: 76.2673
+      }
     },
     image: 'https://images.unsplash.com/photo-1628053473552-f3bcc2595051?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
     distance: 22,
