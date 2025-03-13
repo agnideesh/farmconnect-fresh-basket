@@ -54,29 +54,59 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
+          phone_number: string | null
           user_type: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id: string
+          phone_number?: string | null
           user_type: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          phone_number?: string | null
           user_type?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      products_with_farmer_details: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          farmer_avatar: string | null
+          farmer_email: string | null
+          farmer_id: string | null
+          farmer_name: string | null
+          farmer_phone: string | null
+          id: string | null
+          image_url: string | null
+          name: string | null
+          price: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
