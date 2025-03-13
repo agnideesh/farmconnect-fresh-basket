@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import AnimatedButton from '../UI/AnimatedButton';
-import { LogIn, LogOut, UserPlus, Home, User, Tractor } from 'lucide-react';
+import { LogIn, LogOut, UserPlus, Home, User, Tractor, Film } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const Navbar = () => {
@@ -38,6 +38,14 @@ const Navbar = () => {
           </Link>
 
           <div className="flex items-center gap-4">
+            <Link 
+              to="/movie-view" 
+              className="text-sm font-medium flex items-center gap-2 hover:text-primary transition-colors"
+            >
+              <Film className="w-4 h-4" />
+              <span className="hidden sm:inline">Movies</span>
+            </Link>
+            
             {user && profile ? (
               <>
                 <Link 
