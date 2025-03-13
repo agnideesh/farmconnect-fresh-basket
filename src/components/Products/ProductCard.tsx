@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Info, ShoppingCart, Heart, Phone, Mail } from 'lucide-react';
+import { Info, ShoppingCart, Heart, Phone, Mail, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import {
@@ -33,12 +32,157 @@ export interface Product {
 
 interface ProductCardProps {
   product: Product;
+  view?: 'grid' | 'list';
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showFarmerDetails, setShowFarmerDetails] = useState(false);
   
+  if (view === 'list') {
+    return (
+      <>
+        <div 
+          className="group relative bg-white dark:bg-black/20 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex"
+          onClick={() => setShowFarmerDetails(true)}
+        >
+          {/* Product image */}
+          <div className="relative h-auto w-24 sm:w-36 aspect-square shrink-0">
+            <img 
+              src={product.image} 
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Badges */}
+            <div className="absolute top-1 left-1 flex flex-col gap-1">
+              {product.organic && (
+                <span className="bg-green-100 text-green-800 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+                  Organic
+                </span>
+              )}
+              {product.native && (
+                <span className="bg-blue-100 text-blue-800 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+                  Native
+                </span>
+              )}
+            </div>
+          </div>
+          
+          {/* Product info */}
+          <div className="p-3 flex flex-col justify-between flex-1">
+            <div>
+              <span className="text-xs text-muted-foreground capitalize">{product.category}</span>
+              <h3 className="font-medium">{product.name}</h3>
+              
+              <div className="flex items-center text-sm mt-1">
+                <span className="font-medium">₹{product.price.toFixed(2)}</span>
+                <span className="text-xs text-muted-foreground">/kg</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center gap-1 text-xs">
+                <Avatar className="h-5 w-5">
+                  <AvatarImage src={product.farmer.avatar} />
+                  <AvatarFallback>{product.farmer.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span>{product.farmer.name}</span>
+              </div>
+              
+              <div className="flex items-center gap-1 text-xs">
+                <MapPin className="h-3 w-3 text-muted-foreground" />
+                <span>{product.distance || 0} km</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <button 
+                className="flex-1 flex items-center justify-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-2 py-1 rounded-lg transition-colors text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Add to cart functionality would go here
+                }}
+              >
+                <ShoppingCart className="w-3 h-3" />
+                <span>Add</span>
+              </button>
+              
+              <button 
+                className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Add to favorites functionality would go here
+                }}
+              >
+                <Heart className="w-3 h-3" />
+              </button>
+              
+              <button 
+                className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowFarmerDetails(true);
+                }}
+              >
+                <Info className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Farmer Details Dialog - for list view */}
+        <Dialog open={showFarmerDetails} onOpenChange={setShowFarmerDetails}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Farmer Details</DialogTitle>
+              <DialogDescription>
+                Contact information for {product.farmer.name}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col space-y-4 py-4">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={product.farmer.avatar} alt={product.farmer.name} />
+                  <AvatarFallback>{product.farmer.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-medium">{product.farmer.name}</h3>
+                  <p className="text-sm text-muted-foreground">{product.farmer.location}</p>
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                {product.farmer.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
+                  </div>
+                )}
+                
+                {product.farmer.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a href={`mailto:${product.farmer.email}`} className="text-sm hover:underline">{product.farmer.email}</a>
+                  </div>
+                )}
+              </div>
+              
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-2">About this product</h4>
+                <p className="text-sm">{product.name} - ₹{product.price.toFixed(2)}/kg</p>
+                {product.organic && <span className="inline-block mr-2 mt-2 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">Organic</span>}
+                {product.native && <span className="inline-block mt-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">Native</span>}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+  
+  // Grid view (default)
   return (
     <>
       <div 
@@ -169,6 +313,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <a href={`mailto:${product.farmer.email}`} className="text-sm hover:underline">{product.farmer.email}</a>
+                </div>
+              )}
+              
+              {product.distance && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{product.distance} km away</span>
                 </div>
               )}
             </div>

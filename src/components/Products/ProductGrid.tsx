@@ -1,17 +1,72 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProductCard, { Product } from './ProductCard';
-import { Search } from 'lucide-react';
+import { Search, MapPin, List, Grid as GridIcon } from 'lucide-react';
 import FadeInSection from '../UI/FadeInSection';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface ProductGridProps {
   selectedCategory: string;
 }
 
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
 const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
+  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+  const isMobile = useIsMobile();
+  
+  // Get user's location
+  useEffect(() => {
+    if (navigator.geolocation && isLocationEnabled) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
+  }, [isLocationEnabled]);
+
+  // Calculate distance between two points using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const d = R * c; // Distance in km
+    return Math.round(d);
+  };
   
   // Fetch products from Supabase
   const { data: products, isLoading, error } = useQuery({
@@ -39,22 +94,39 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
         image: item.image_url || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
         organic: Math.random() > 0.5, // Placeholder, you can add this field to your DB
         native: Math.random() > 0.5,  // Placeholder, you can add this field to your DB
-        distance: Math.floor(Math.random() * 50) + 1 // Placeholder distance, can be calculated based on user location
+        distance: userLocation ? calculateDistance(
+          userLocation.latitude, 
+          userLocation.longitude, 
+          // Random coordinates near the user's location for demonstration
+          userLocation.latitude + (Math.random() * 0.1 - 0.05), 
+          userLocation.longitude + (Math.random() * 0.1 - 0.05)
+        ) : Math.floor(Math.random() * 50) + 1
       }));
-    }
+    },
+    enabled: true,
+    refetchInterval: isLocationEnabled ? 30000 : false, // Refetch every 30 seconds if location is enabled
   });
   
-  // Filter products based on category and search query
-  const filteredProducts = (products || []).filter(product => {
-    // Filter by category
-    const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
-    
-    // Filter by search query
-    const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return categoryMatch && searchMatch;
-  });
+  // Filter products based on category, search query, and sort by distance if location is enabled
+  const filteredProducts = React.useMemo(() => {
+    let filtered = (products || []).filter(product => {
+      // Filter by category
+      const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
+      
+      // Filter by search query
+      const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      return categoryMatch && searchMatch;
+    });
+
+    // Sort by distance if location is enabled
+    if (isLocationEnabled && userLocation) {
+      filtered = filtered.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
+
+    return filtered;
+  }, [products, selectedCategory, searchQuery, isLocationEnabled, userLocation]);
 
   // Show loading state
   if (isLoading) {
@@ -99,34 +171,143 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     return categoryMatch && searchMatch;
   });
 
+  const LocationToggle = () => (
+    <button
+      onClick={() => setIsLocationEnabled(!isLocationEnabled)}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+        isLocationEnabled 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-gray-100 text-gray-800'
+      } transition-colors`}
+    >
+      <MapPin className="w-4 h-4" />
+      <span className="text-sm">
+        {isLocationEnabled ? 'Location On' : 'Enable Location'}
+      </span>
+    </button>
+  );
+
+  const FilterSection = () => (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <h2 className="text-2xl font-bold">
+        {selectedCategory === 'all' ? 'Featured Products' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+        <span className="text-sm font-normal text-muted-foreground ml-2">({displayProducts.length} products)</span>
+      </h2>
+      
+      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        {/* Location toggle */}
+        <LocationToggle />
+        
+        {/* View mode toggle */}
+        <div className="flex rounded-lg overflow-hidden border border-border">
+          <button 
+            onClick={() => setViewMode('grid')}
+            className={`flex items-center justify-center p-2 ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'bg-white'}`}
+          >
+            <GridIcon className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => setViewMode('list')}
+            className={`flex items-center justify-center p-2 ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'bg-white'}`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+        
+        {/* Search */}
+        <div className="relative w-full sm:w-auto">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search products or farmers..."
+            className="w-full sm:w-64 pl-10 pr-4 py-2 border border-border rounded-lg bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // Mobile filters in drawer/sheet
+  const MobileFilters = () => (
+    <>
+      {isMobile ? (
+        <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold">
+            {selectedCategory === 'all' ? 'Featured Products' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+          </h2>
+          
+          <Sheet>
+            <SheetTrigger className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-lg">
+              <Search className="w-4 h-4" />
+              <span className="text-sm">Filters</span>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="sm:max-w-md mx-auto rounded-t-xl">
+              <SheetHeader>
+                <SheetTitle>Search & Filters</SheetTitle>
+              </SheetHeader>
+              <div className="py-4 space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                    <Search className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search products or farmers..."
+                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">View Mode</span>
+                  <div className="flex rounded-lg overflow-hidden border border-border">
+                    <button 
+                      onClick={() => setViewMode('grid')}
+                      className={`flex items-center justify-center p-2 ${viewMode === 'grid' ? 'bg-primary/10 text-primary' : 'bg-white'}`}
+                    >
+                      <GridIcon className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => setViewMode('list')}
+                      className={`flex items-center justify-center p-2 ${viewMode === 'list' ? 'bg-primary/10 text-primary' : 'bg-white'}`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Location</span>
+                  <LocationToggle />
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      ) : (
+        <FilterSection />
+      )}
+    </>
+  );
+
   return (
     <section className="py-8">
       <div className="container px-6 mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <h2 className="text-2xl font-bold">
-            {selectedCategory === 'all' ? 'Featured Products' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
-            <span className="text-sm font-normal text-muted-foreground ml-2">({displayProducts.length} products)</span>
-          </h2>
-          
-          <div className="relative w-full sm:w-auto">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search products or farmers..."
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border border-border rounded-lg bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
+        <MobileFilters />
         
         {displayProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className={viewMode === 'grid' 
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" 
+            : "flex flex-col gap-4"
+          }>
             {displayProducts.map((product, index) => (
               <FadeInSection key={product.id} delay={index * 100} className="h-full">
-                <ProductCard product={product} />
+                <ProductCard product={product} view={viewMode} />
               </FadeInSection>
             ))}
           </div>
