@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Moon, Sun, Menu, X } from 'lucide-react';
+import { Moon, Sun, Menu, X, ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import CartIcon from '@/components/Cart/CartIcon';
@@ -17,7 +17,6 @@ import {
   SheetClose,
   SheetFooter
 } from "@/components/ui/sheet";
-import { Minus, Plus, Trash2 } from 'lucide-react';
 
 interface NavItem {
   to: string;
