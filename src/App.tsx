@@ -12,7 +12,6 @@ import UserDashboard from "./pages/UserDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
-import MovieView from "./pages/MovieView";
 import Settings from "./pages/Settings";
 import ThemeInitializer from "./components/ThemeInitializer";
 
@@ -40,7 +39,6 @@ const App = () => (
                 <FarmerDashboard />
               </ProtectedRoute>
             } />
-            <Route path="/movie-view" element={<MovieView />} />
             <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
