@@ -28,21 +28,31 @@ const Hero: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <AnimatedButton 
-                size="lg" 
-                icon={<Search className="w-5 h-5" />}
-                iconPosition="left"
-              >
-                Explore Products
-              </AnimatedButton>
-              <AnimatedButton 
-                size="lg" 
-                variant="outline"
-                icon={<ArrowRight className="w-5 h-5" />}
-                iconPosition="right"
-              >
-                Meet Our Farmers
-              </AnimatedButton>
+              <Link to="/#products">
+                <AnimatedButton 
+                  size="lg" 
+                  icon={<Search className="w-5 h-5" />}
+                  iconPosition="left"
+                  onClick={() => {
+                    const productsSection = document.getElementById('products');
+                    if (productsSection) {
+                      productsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  Explore Products
+                </AnimatedButton>
+              </Link>
+              <Link to="/farmers">
+                <AnimatedButton 
+                  size="lg" 
+                  variant="outline"
+                  icon={<ArrowRight className="w-5 h-5" />}
+                  iconPosition="right"
+                >
+                  Meet Our Farmers
+                </AnimatedButton>
+              </Link>
             </div>
             
             <div className="mt-10 grid grid-cols-3 gap-6">
