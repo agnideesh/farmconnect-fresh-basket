@@ -6,14 +6,14 @@ import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import FarmerCard from '@/components/Farmers/FarmerCard';
 
-// Mock data for farmers
+// Mock data for farmers adapted to match FarmerData interface
 const farmersMockData = [
   {
     id: '44e19264-b00c-44fb-b922-f29e68021331',
-    name: 'John Smith',
+    full_name: 'John Smith',
     location: 'Karnataka, India',
     specialties: ['Organic Vegetables', 'Fruits'],
-    image: 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFybWVyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+    avatar_url: 'https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFybWVyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
     bio: 'Third-generation farmer specializing in organic produce with sustainable practices.',
     phone_number: '+91 98765 43210',
     email: 'john.smith@example.com',
@@ -22,10 +22,10 @@ const farmersMockData = [
   },
   {
     id: '5e7f3a2b-8c9d-4e5f-a6b7-1c2d3e4f5a6b',
-    name: 'Priya Sharma',
+    full_name: 'Priya Sharma',
     location: 'Tamil Nadu, India',
     specialties: ['Rice', 'Spices'],
-    image: 'https://images.unsplash.com/photo-1594761051685-a2e4d108e240?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGluZGlhbiUyMGZhcm1lcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+    avatar_url: 'https://images.unsplash.com/photo-1594761051685-a2e4d108e240?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGluZGlhbiUyMGZhcm1lcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
     bio: 'Passionate about traditional farming methods and heirloom crop varieties.',
     phone_number: '+91 87654 32109',
     email: 'priya.sharma@example.com',
@@ -34,10 +34,10 @@ const farmersMockData = [
   },
   {
     id: '7a8b9c0d-1e2f-3g4h-5i6j-7k8l9m0n1o2p',
-    name: 'Raj Patel',
+    full_name: 'Raj Patel',
     location: 'Gujarat, India',
     specialties: ['Cotton', 'Groundnuts'],
-    image: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8aW5kaWFuJTIwZmFybWVyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+    avatar_url: 'https://images.unsplash.com/photo-1586771107445-d3ca888129ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8aW5kaWFuJTIwZmFybWVyfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
     bio: 'Leading sustainable agriculture initiatives in the region for over 15 years.',
     phone_number: '+91 76543 21098',
     email: 'raj.patel@example.com',
