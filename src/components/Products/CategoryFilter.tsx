@@ -4,29 +4,39 @@ import { cn } from '@/lib/utils';
 import { Leaf, Apple, Flower2, Coffee, Package } from 'lucide-react';
 import FadeInSection from '../UI/FadeInSection';
 
-interface Category {
+export interface Category {
   id: string;
   name: string;
-  icon: React.ReactNode;
 }
 
-interface CategoryFilterProps {
-  selectedCategory: string;
-  onCategoryChange: (category: string) => void;
+export interface CategoryFilterProps {
+  categories: Category[];
+  activeCategory: string;
+  onChange: (category: string) => void;
 }
 
 const CategoryFilter: React.FC<CategoryFilterProps> = ({
-  selectedCategory,
-  onCategoryChange,
+  categories,
+  activeCategory,
+  onChange,
 }) => {
-  const categories: Category[] = [
-    { id: 'all', name: 'All Products', icon: <Package className="w-5 h-5" /> },
-    { id: 'vegetables', name: 'Vegetables', icon: <Leaf className="w-5 h-5" /> },
-    { id: 'fruits', name: 'Fruits', icon: <Apple className="w-5 h-5" /> },
-    { id: 'herbs', name: 'Herbs', icon: <Leaf className="w-5 h-5 rotate-45" /> },
-    { id: 'flowers', name: 'Flowers', icon: <Flower2 className="w-5 h-5" /> },
-    { id: 'byproducts', name: 'Byproducts', icon: <Coffee className="w-5 h-5" /> },
-  ];
+  const getIcon = (categoryId: string) => {
+    switch (categoryId) {
+      case 'vegetables':
+        return <Leaf className="w-5 h-5" />;
+      case 'fruits':
+        return <Apple className="w-5 h-5" />;
+      case 'herbs':
+        return <Leaf className="w-5 h-5 rotate-45" />;
+      case 'flowers':
+        return <Flower2 className="w-5 h-5" />;
+      case 'spices':
+      case 'grains':
+        return <Coffee className="w-5 h-5" />;
+      default:
+        return <Package className="w-5 h-5" />;
+    }
+  };
 
   return (
     <FadeInSection className="w-full py-8">
@@ -37,16 +47,16 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
           {categories.map((category, index) => (
             <button
               key={category.id}
-              onClick={() => onCategoryChange(category.id)}
+              onClick={() => onChange(category.id)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full transition-all-200 font-medium text-sm md:text-base",
-                selectedCategory === category.id
+                activeCategory === category.id
                   ? "bg-primary text-white shadow-md"
                   : "bg-secondary/50 hover:bg-secondary text-foreground/80 hover:text-foreground"
               )}
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              {category.icon}
+              {getIcon(category.id)}
               {category.name}
             </button>
           ))}

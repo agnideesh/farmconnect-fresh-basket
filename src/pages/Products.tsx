@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import ProductGrid from '@/components/Products/ProductGrid';
-import CategoryFilter from '@/components/Products/CategoryFilter';
+import CategoryFilter, { Category } from '@/components/Products/CategoryFilter';
 
 // Define types to match the expected component props
 interface ProductType {
@@ -20,11 +19,6 @@ interface ProductType {
     location: string;
     phone_number: string;
   };
-}
-
-interface CategoryType {
-  id: string;
-  name: string;
 }
 
 // Mock product data
@@ -115,25 +109,13 @@ const productsMockData: ProductType[] = [
   }
 ];
 
-const categories: CategoryType[] = [
+const categories: Category[] = [
   { id: 'all', name: 'All Products' },
   { id: 'vegetables', name: 'Vegetables' },
   { id: 'fruits', name: 'Fruits' },
   { id: 'grains', name: 'Grains' },
   { id: 'spices', name: 'Spices' },
 ];
-
-// Override CategoryFilter props to match expected type
-interface CategoryFilterProps {
-  categories: CategoryType[];
-  activeCategory: string;
-  onChange: (category: string) => void;
-}
-
-// Override ProductGrid props to match expected type
-interface ProductGridProps {
-  products: ProductType[];
-}
 
 const Products: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
