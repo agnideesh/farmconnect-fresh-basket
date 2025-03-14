@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -8,6 +7,13 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   user_type: 'user' | 'farmer';
+  phone_number: string | null;
+  location: string | null;
+  bio: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  specialties: string[] | null;
+  email: string | null;
 }
 
 interface AuthContextType {
