@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation } from 'lucide-react';
+import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation, PhoneCall } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import {
@@ -11,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FarmerLocationMap from '../Map/FarmerLocationMap';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 
 export interface Product {
   id: string;
@@ -50,6 +53,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
   };
 
   const farmerCoordinates = product.farmer.coordinates || defaultCoordinates;
+  
+  const handleCallFarmer = () => {
+    if (product.farmer.phone) {
+      window.location.href = `tel:${product.farmer.phone}`;
+    } else {
+      toast({
+        title: "Contact information unavailable",
+        description: "Phone number for this farmer is not available.",
+        variant: "destructive"
+      });
+    }
+  };
   
   if (view === 'list') {
     return (
@@ -136,6 +151,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               >
                 <Info className="w-3 h-3" />
               </button>
+
+              <button 
+                className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCallFarmer();
+                }}
+              >
+                <PhoneCall className="w-3 h-3 text-green-700" />
+              </button>
             </div>
           </div>
         </div>
@@ -166,6 +191,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
                     <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="ml-auto h-8 gap-1 text-green-700"
+                      onClick={handleCallFarmer}
+                    >
+                      <PhoneCall className="h-3.5 w-3.5" /> Call
+                    </Button>
                   </div>
                 )}
                 
@@ -261,6 +294,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             >
               <Info className="w-4 h-4 text-foreground" />
             </button>
+            <button 
+              className="w-8 h-8 rounded-full bg-green-100/80 backdrop-blur-sm flex items-center justify-center hover:bg-green-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCallFarmer();
+              }}
+            >
+              <PhoneCall className="w-4 h-4 text-green-700" />
+            </button>
           </div>
         </div>
         
@@ -293,10 +335,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             
             <div className="flex items-center justify-between">
               <div className="text-lg font-semibold">₹{product.price.toFixed(2)}<span className="text-xs text-muted-foreground">/kg</span></div>
-              <button className="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg transition-colors">
-                <ShoppingCart className="w-4 h-4" />
-                <span className="text-sm">Add</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  className="flex items-center justify-center h-8 w-8 rounded-full bg-green-100 hover:bg-green-200 text-green-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCallFarmer();
+                  }}
+                >
+                  <PhoneCall className="w-4 h-4" />
+                </button>
+                <button className="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg transition-colors">
+                  <ShoppingCart className="w-4 h-4" />
+                  <span className="text-sm">Add</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -328,6 +381,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
                   <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="ml-auto h-8 gap-1 text-green-700"
+                    onClick={handleCallFarmer}
+                  >
+                    <PhoneCall className="h-3.5 w-3.5" /> Call
+                  </Button>
                 </div>
               )}
               
