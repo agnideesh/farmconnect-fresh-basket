@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import FarmerDashboard from "./pages/FarmerDashboard";
+import FarmersList from "./pages/FarmersList";
+import FarmerProfile from "./pages/FarmerProfile";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Settings from "./pages/Settings";
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/farmers" element={<FarmersList />} />
+            <Route path="/farmers/:farmerId" element={<FarmerProfile />} />
             <Route path="/user-dashboard" element={
               <ProtectedRoute userType="user">
                 <UserDashboard />
