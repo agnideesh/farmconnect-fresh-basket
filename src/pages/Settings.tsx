@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Sun, Moon, MapPin, Lock, User, Phone } from 'lucide-react';
+import { Sun, Moon, MapPin, Lock, User, Phone, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -184,7 +184,7 @@ const Settings: React.FC = () => {
         description: "Your password has been changed successfully",
       });
       
-      form.reset();
+      passwordForm.reset();
     } catch (error: any) {
       toast({
         title: "Error",

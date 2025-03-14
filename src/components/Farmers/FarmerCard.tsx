@@ -7,11 +7,15 @@ import { Card, CardContent } from '@/components/ui/card';
 
 export interface FarmerData {
   id: string;
-  full_name: string;
+  full_name: string | null;
   avatar_url: string | null;
   location: string | null;
   bio: string | null;
   specialties: string[] | null;
+  email: string | null;
+  phone_number: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface FarmerCardProps {
