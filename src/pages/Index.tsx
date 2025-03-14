@@ -35,13 +35,11 @@ const Index = () => {
         
         <div id="products" ref={productsRef}>
           <CategoryFilter
-            activeCategory={selectedCategory}
-            onChange={setSelectedCategory}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
           />
           
-          <ProductGrid 
-            category={selectedCategory} 
-          />
+          <ProductGrid selectedCategory={selectedCategory} />
         </div>
 
         <FadeInSection className="py-16 bg-primary/5">
