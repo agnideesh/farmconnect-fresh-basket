@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Loader2, MapPin, Phone, Mail, Tractor, Leaf } from 'lucide-react';
 import { FarmerData } from '@/components/Farmers/FarmerCard';
 import FadeInSection from '@/components/UI/FadeInSection';
+import { toast } from '@/hooks/use-toast';
 
 const FarmerProfile = () => {
   const { farmerId } = useParams<{ farmerId: string }>();
@@ -60,6 +61,7 @@ const FarmerProfile = () => {
           location: farmer?.location || 'Unknown Location',
           avatar: farmer?.avatar_url || undefined,
           email: farmer?.email || undefined,
+          phone: farmer?.phone_number || undefined,
           coordinates: farmer?.latitude && farmer?.longitude ? {
             latitude: farmer.latitude,
             longitude: farmer.longitude
@@ -71,6 +73,18 @@ const FarmerProfile = () => {
   });
   
   const isLoading = isLoadingFarmer || isLoadingProducts;
+  
+  const handleCallFarmer = () => {
+    if (farmer?.phone_number) {
+      window.location.href = `tel:${farmer.phone_number}`;
+    } else {
+      toast({
+        title: "Phone number not available",
+        description: "This farmer hasn't provided a phone number yet.",
+        variant: "destructive"
+      });
+    }
+  };
   
   if (isLoading) {
     return (
@@ -152,10 +166,10 @@ const FarmerProfile = () => {
                     {farmer.phone_number && (
                       <a 
                         href={`tel:${farmer.phone_number}`}
-                        className="flex items-center gap-1 text-sm hover:text-primary transition-colors"
+                        className="flex items-center gap-1 text-sm hover:text-primary transition-colors bg-primary/5 px-3 py-2 rounded-lg font-medium"
                       >
                         <Phone className="h-4 w-4" />
-                        {farmer.phone_number}
+                        {farmer.phone_number} <span className="text-xs ml-1">(Call now to order)</span>
                       </a>
                     )}
                     
@@ -199,6 +213,20 @@ const FarmerProfile = () => {
                     <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-muted-foreground">Location not available</p>
                   </div>
+                </div>
+              )}
+              
+              {farmer.phone_number && (
+                <div className="mt-4 p-4 bg-primary/5 rounded-lg text-center">
+                  <h3 className="font-medium mb-2">Call to place an order</h3>
+                  <Button 
+                    variant="default" 
+                    className="w-full"
+                    onClick={handleCallFarmer}
+                  >
+                    <Phone className="mr-2 h-4 w-4" />
+                    Call {farmer.phone_number}
+                  </Button>
                 </div>
               )}
             </FadeInSection>
@@ -264,6 +292,34 @@ const FarmerProfile = () => {
                   ) : (
                     <p className="text-muted-foreground italic">No specialties listed</p>
                   )}
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2">Contact Information</h3>
+                  <div className="space-y-2">
+                    {farmer.phone_number ? (
+                      <div className="flex items-center">
+                        <Phone className="h-4 w-4 text-muted-foreground mr-2" />
+                        <span className="text-sm">{farmer.phone_number}</span>
+                        <Button 
+                          variant="link" 
+                          className="ml-2 h-auto p-0"
+                          onClick={handleCallFarmer}
+                        >
+                          Call now
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground italic">No phone number available</p>
+                    )}
+                    
+                    {farmer.email && (
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 text-muted-foreground mr-2" />
+                        <a href={`mailto:${farmer.email}`} className="text-sm hover:underline">{farmer.email}</a>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div>
