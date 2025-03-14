@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,8 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FarmerLocationMap from '../Map/FarmerLocationMap';
-import { useCart } from '@/contexts/CartContext';
-import { toast } from '@/hooks/use-toast';
 
 export interface Product {
   id: string;
@@ -46,7 +43,6 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showFarmerDetails, setShowFarmerDetails] = useState(false);
-  const { addToCart } = useCart();
   
   const defaultCoordinates = {
     latitude: 12.9716,
@@ -54,24 +50,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
   };
 
   const farmerCoordinates = product.farmer.coordinates || defaultCoordinates;
-  
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    addToCart(product);
-  };
-  
-  const handleCallFarmer = (e: React.MouseEvent, phone?: string) => {
-    e.stopPropagation();
-    if (phone) {
-      window.location.href = `tel:${phone}`;
-    } else {
-      toast({
-        title: "Phone number not available",
-        description: "This farmer hasn't provided a phone number yet.",
-        variant: "destructive"
-      });
-    }
-  };
   
   if (view === 'list') {
     return (
@@ -130,7 +108,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <div className="flex items-center gap-2 mt-2">
               <button 
                 className="flex-1 flex items-center justify-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-2 py-1 rounded-lg transition-colors text-xs"
-                onClick={handleAddToCart}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Add to cart functionality would go here
+                }}
               >
                 <ShoppingCart className="w-3 h-3" />
                 <span>Add</span>
@@ -184,13 +165,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 {product.farmer.phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <a 
-                      href={`tel:${product.farmer.phone}`} 
-                      className="text-sm hover:underline"
-                      onClick={(e) => handleCallFarmer(e, product.farmer.phone)}
-                    >
-                      {product.farmer.phone} (Call now to order)
-                    </a>
+                    <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
                   </div>
                 )}
                 
@@ -286,14 +261,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             >
               <Info className="w-4 h-4 text-foreground" />
             </button>
-            {product.farmer.phone && (
-              <button 
-                className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
-                onClick={(e) => handleCallFarmer(e, product.farmer.phone)}
-              >
-                <Phone className="w-4 h-4 text-foreground" />
-              </button>
-            )}
           </div>
         </div>
         
@@ -311,7 +278,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                   to={`/farmers/${product.farmer.id}`} 
                   className="text-sm font-medium hover:text-primary transition-colors"
                   onClick={(e) => {
-                    e.stopPropagation();
+                    e.preventDefault();
                     setShowFarmerDetails(true);
                   }}
                 >
@@ -326,10 +293,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             
             <div className="flex items-center justify-between">
               <div className="text-lg font-semibold">₹{product.price.toFixed(2)}<span className="text-xs text-muted-foreground">/kg</span></div>
-              <button 
-                className="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg transition-colors"
-                onClick={handleAddToCart}
-              >
+              <button className="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg transition-colors">
                 <ShoppingCart className="w-4 h-4" />
                 <span className="text-sm">Add</span>
               </button>
@@ -363,13 +327,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               {product.farmer.phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a 
-                    href={`tel:${product.farmer.phone}`} 
-                    className="text-sm hover:underline"
-                    onClick={(e) => handleCallFarmer(e, product.farmer.phone)}
-                  >
-                    {product.farmer.phone} (Call now to order)
-                  </a>
+                  <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
                 </div>
               )}
               

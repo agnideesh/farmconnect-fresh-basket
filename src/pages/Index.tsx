@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Layout/Navbar';
 import Hero from '@/components/Hero/Hero';
 import CategoryFilter from '@/components/Products/CategoryFilter';
@@ -10,11 +10,6 @@ import { ArrowDown } from 'lucide-react';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const productsRef = useRef<HTMLDivElement>(null);
-
-  const scrollToProducts = () => {
-    productsRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -24,23 +19,18 @@ const Index = () => {
         <Hero />
         
         <FadeInSection className="text-center py-10" delay={600}>
-          <button 
-            className="animate-float inline-flex flex-col items-center text-muted-foreground hover:text-foreground transition-colors"
-            onClick={scrollToProducts}
-          >
+          <button className="animate-float inline-flex flex-col items-center text-muted-foreground hover:text-foreground transition-colors">
             <span className="text-sm font-medium mb-2">Discover Products</span>
             <ArrowDown className="w-5 h-5" />
           </button>
         </FadeInSection>
         
-        <div id="products" ref={productsRef}>
-          <CategoryFilter
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
-          
-          <ProductGrid selectedCategory={selectedCategory} />
-        </div>
+        <CategoryFilter
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+        />
+        
+        <ProductGrid selectedCategory={selectedCategory} />
 
         <FadeInSection className="py-16 bg-primary/5">
           <div className="container px-6 mx-auto">
