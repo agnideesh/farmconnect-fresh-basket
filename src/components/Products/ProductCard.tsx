@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -382,13 +381,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <a href={`mailto:${product.farmer.email}`} className="text-sm hover:underline">{product.farmer.email}</a>
-                </div>
-              )}
-              
-              {product.distance && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{product.distance} km away</span>
                 </div>
               )}
             </div>

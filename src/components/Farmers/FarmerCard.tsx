@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Tractor } from 'lucide-react';
+import { MapPin, Tractor, Phone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export interface FarmerData {
@@ -58,16 +58,21 @@ const FarmerCard: React.FC<FarmerCardProps> = ({ farmer }) => {
             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{farmer.bio}</p>
           )}
           
-          {farmer.specialties && farmer.specialties.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {farmer.specialties.map((specialty, index) => (
-                <span 
-                  key={index} 
-                  className="bg-primary/10 text-primary/80 text-xs px-2 py-1 rounded-full"
-                >
-                  {specialty}
-                </span>
-              ))}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {farmer.specialties && farmer.specialties.length > 0 && farmer.specialties.map((specialty, index) => (
+              <span 
+                key={index} 
+                className="bg-primary/10 text-primary/80 text-xs px-2 py-1 rounded-full"
+              >
+                {specialty}
+              </span>
+            ))}
+          </div>
+          
+          {farmer.phone_number && (
+            <div className="flex items-center text-xs text-muted-foreground mt-2">
+              <Phone className="h-3 w-3 mr-1 text-green-600" />
+              <span>{farmer.phone_number}</span>
             </div>
           )}
         </CardContent>

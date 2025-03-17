@@ -16,6 +16,7 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     fullName: '',
+    phoneNumber: '', // Added phone number field
   });
   const [loading, setLoading] = useState(false);
   
@@ -52,6 +53,7 @@ const Register = () => {
           data: {
             full_name: formData.fullName,
             user_type: userType,
+            phone_number: formData.phoneNumber, // Add phone number to user data
           }
         }
       });
@@ -135,6 +137,21 @@ const Register = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     placeholder="Enter your email"
+                  />
+                </div>
+
+                {/* Add Phone Number Field */}
+                <div>
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium">
+                    Phone Number
+                  </label>
+                  <input
+                    id="phoneNumber"
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    placeholder="Enter your phone number"
                   />
                 </div>
 

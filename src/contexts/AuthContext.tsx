@@ -21,7 +21,17 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (data: { email: string; password: string; options?: { data: { full_name: string; user_type: 'user' | 'farmer' } } }) => Promise<void>;
+  signUp: (data: { 
+    email: string; 
+    password: string; 
+    options?: { 
+      data: { 
+        full_name: string; 
+        user_type: 'user' | 'farmer';
+        phone_number?: string;
+      } 
+    } 
+  }) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -87,7 +97,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     options?: { 
       data: { 
         full_name: string; 
-        user_type: 'user' | 'farmer' 
+        user_type: 'user' | 'farmer';
+        phone_number?: string;
       } 
     } 
   }) => {
