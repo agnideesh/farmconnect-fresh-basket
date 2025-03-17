@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,12 +21,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Product } from '@/components/Products/ProductCard';
 
-// Extend the Product interface from ProductCard to include description
 interface ExtendedProduct extends Product {
   description?: string;
 }
 
-// Define a type for the raw product data from Supabase
 interface RawProductData {
   id: string;
   name: string;
@@ -37,7 +34,7 @@ interface RawProductData {
   farmer_id: string | null;
   image_url: string | null;
   created_at: string;
-  quantity?: number; // Make it optional since it might not be in older records
+  quantity?: number;
 }
 
 const FarmerDashboard = () => {
@@ -50,7 +47,6 @@ const FarmerDashboard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [productForm, setProductForm] = useState({
     id: '',
@@ -63,11 +59,10 @@ const FarmerDashboard = () => {
 
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Fetch farmer's products
   useEffect(() => {
-    const fetchProducts = async () => {
-      if (!user) return;
+    if (!user) return;
 
+    const fetchProducts = async () => {
       try {
         const { data, error } = await supabase
           .from('products')
@@ -76,11 +71,10 @@ const FarmerDashboard = () => {
 
         if (error) throw error;
 
-        // Map the Supabase products to include the farmer data and ensure quantity is present
         const productsWithFarmer = data.map((product: RawProductData) => ({
           ...product,
-          quantity: product.quantity || 0, // Use existing quantity or default to 0
-          description: product.description || '', // Add description field
+          quantity: product.quantity || 0,
+          description: product.description || '',
           farmer: {
             id: user.id,
             name: profile?.full_name || 'Unknown Farmer',
@@ -114,16 +108,13 @@ const FarmerDashboard = () => {
     fetchProducts();
   }, [user, profile, toast]);
 
-  // Handle image upload
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  // Open dialog for new product
   const handleAddProduct = () => {
     setIsEditMode(false);
     setProductForm({
@@ -135,11 +126,9 @@ const FarmerDashboard = () => {
       quantity: 0
     });
     setSelectedImage(null);
-    setImagePreview(null);
     setIsDialogOpen(true);
   };
 
-  // Open dialog for editing product
   const handleEditProduct = (product: ExtendedProduct) => {
     setIsEditMode(true);
     setProductForm({
@@ -150,12 +139,10 @@ const FarmerDashboard = () => {
       category: product.category,
       quantity: product.quantity || 0
     });
-    setImagePreview(product.image);
     setSelectedImage(null);
     setIsDialogOpen(true);
   };
 
-  // Handle form change
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setProductForm(prev => ({
@@ -164,7 +151,6 @@ const FarmerDashboard = () => {
     }));
   };
 
-  // Handle category selection
   const handleCategoryChange = (value: string) => {
     setProductForm(prev => ({
       ...prev,
@@ -172,7 +158,6 @@ const FarmerDashboard = () => {
     }));
   };
 
-  // Upload image to storage
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
@@ -193,7 +178,6 @@ const FarmerDashboard = () => {
     return publicUrl;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -201,15 +185,13 @@ const FarmerDashboard = () => {
     setIsSubmitting(true);
 
     try {
-      let imageUrl = imagePreview;
+      let imageUrl = isEditMode ? productForm.image : null;
 
-      // Upload image if selected
       if (selectedImage) {
         imageUrl = await uploadImage(selectedImage);
       }
 
       if (isEditMode) {
-        // Update existing product
         const { error } = await supabase
           .from('products')
           .update({
@@ -218,13 +200,12 @@ const FarmerDashboard = () => {
             price: productForm.price,
             category: productForm.category,
             quantity: productForm.quantity,
-            ...(imageUrl && imageUrl !== imagePreview ? { image_url: imageUrl } : {})
+            ...(imageUrl ? { image_url: imageUrl } : {})
           })
           .eq('id', productForm.id);
 
         if (error) throw error;
 
-        // Update local state
         setProducts(prev =>
           prev.map(p =>
             p.id === productForm.id
@@ -246,7 +227,6 @@ const FarmerDashboard = () => {
           description: 'Product updated successfully',
         });
       } else {
-        // Insert new product
         const { data, error } = await supabase
           .from('products')
           .insert({
@@ -263,11 +243,10 @@ const FarmerDashboard = () => {
 
         if (error) throw error;
 
-        // Add to local state
         setProducts(prev => [
           ...prev,
           {
-            ...data as RawProductData, // Cast to our RawProductData type
+            ...data as RawProductData,
             quantity: (data as any).quantity || 0,
             description: (data as any).description || '',
             farmer: {
@@ -307,7 +286,6 @@ const FarmerDashboard = () => {
     }
   };
 
-  // Handle product deletion
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
@@ -319,7 +297,6 @@ const FarmerDashboard = () => {
 
       if (error) throw error;
 
-      // Remove from local state
       setProducts(prev => prev.filter(p => p.id !== productId));
 
       toast({
@@ -516,18 +493,9 @@ const FarmerDashboard = () => {
                   onChange={handleImageChange}
                 />
                 <span className="text-sm text-muted-foreground">
-                  {selectedImage ? selectedImage.name : imagePreview ? 'Current image' : 'No image selected'}
+                  {selectedImage ? selectedImage.name : isEditMode ? 'Current image' : 'No image selected'}
                 </span>
               </div>
-              {(imagePreview || selectedImage) && (
-                <div className="mt-2 border rounded-md overflow-hidden w-full h-40">
-                  <img
-                    src={imagePreview || ''}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
             </div>
 
             <DialogFooter>
