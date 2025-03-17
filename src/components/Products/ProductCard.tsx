@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation } from 'lucide-react';
+import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import {
@@ -18,6 +18,7 @@ export interface Product {
   name: string;
   category: string;
   price: number;
+  quantity?: number;
   farmer: {
     id: string;
     name: string;
@@ -89,6 +90,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 <span className="font-medium">₹{product.price.toFixed(2)}</span>
                 <span className="text-xs text-muted-foreground">/kg</span>
               </div>
+              
+              {product.quantity !== undefined && (
+                <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                  <Package className="w-3 h-3" />
+                  <span>{product.quantity} kg available</span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center justify-between mt-2">
@@ -213,6 +221,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-2">About this product</h4>
                 <p className="text-sm">{product.name} - ₹{product.price.toFixed(2)}/kg</p>
+                {product.quantity !== undefined && (
+                  <p className="text-sm mt-1 flex items-center gap-1">
+                    <Package className="h-3 w-3" />
+                    <span>{product.quantity} kg available</span>
+                  </p>
+                )}
                 {product.organic && <span className="inline-block mr-2 mt-2 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">Organic</span>}
                 {product.native && <span className="inline-block mt-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">Native</span>}
               </div>
@@ -294,6 +308,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           <div className="mb-2">
             <span className="text-xs text-muted-foreground capitalize">{product.category}</span>
             <h3 className="font-medium">{product.name}</h3>
+            
+            {product.quantity !== undefined && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                <Package className="w-3 h-3" />
+                <span>{product.quantity} kg available</span>
+              </div>
+            )}
           </div>
           
           <div className="mt-auto">
@@ -395,6 +416,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <div className="border-t pt-4">
               <h4 className="font-medium mb-2">About this product</h4>
               <p className="text-sm">{product.name} - ₹{product.price.toFixed(2)}/kg</p>
+              {product.quantity !== undefined && (
+                <p className="text-sm mt-1 flex items-center gap-1">
+                  <Package className="h-3 w-3" />
+                  <span>{product.quantity} kg available</span>
+                </p>
+              )}
               {product.organic && <span className="inline-block mr-2 mt-2 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">Organic</span>}
               {product.native && <span className="inline-block mt-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">Native</span>}
             </div>

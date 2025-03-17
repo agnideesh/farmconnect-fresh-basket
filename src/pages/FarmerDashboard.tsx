@@ -14,6 +14,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  quantity: number;
   category: string;
   image_url: string;
 }
@@ -30,6 +31,7 @@ const FarmerDashboard = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [category, setCategory] = useState('vegetables');
   const [image, setImage] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -66,6 +68,7 @@ const FarmerDashboard = () => {
     setName('');
     setDescription('');
     setPrice('');
+    setQuantity('');
     setCategory('vegetables');
     setImage(null);
   };
@@ -107,6 +110,7 @@ const FarmerDashboard = () => {
           name,
           description,
           price: parseFloat(price),
+          quantity: parseInt(quantity) || 0,
           category,
           image_url: imageUrl
         });
@@ -213,6 +217,7 @@ const FarmerDashboard = () => {
                       <th className="text-left py-4 px-2">Name</th>
                       <th className="text-left py-4 px-2">Category</th>
                       <th className="text-left py-4 px-2">Price</th>
+                      <th className="text-left py-4 px-2">Quantity</th>
                       <th className="text-right py-4 px-2">Actions</th>
                     </tr>
                   </thead>
@@ -233,6 +238,7 @@ const FarmerDashboard = () => {
                         <td className="py-4 px-2 font-medium">{product.name}</td>
                         <td className="py-4 px-2 capitalize">{product.category}</td>
                         <td className="py-4 px-2">${product.price.toFixed(2)}</td>
+                        <td className="py-4 px-2">{product.quantity || 0} kg</td>
                         <td className="py-4 px-2">
                           <div className="flex justify-end gap-2">
                             <button className="p-2 hover:bg-secondary rounded-full transition-colors">
@@ -341,6 +347,20 @@ const FarmerDashboard = () => {
                     <option value="byproducts">Byproducts</option>
                   </select>
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="quantity" className="text-sm font-medium">Quantity Available (kg)</label>
+                <input
+                  id="quantity"
+                  type="number"
+                  min="0"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="w-full p-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder="Enter available quantity"
+                  required
+                />
               </div>
               
               <div className="space-y-2">
