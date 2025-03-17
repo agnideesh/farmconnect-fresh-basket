@@ -27,6 +27,19 @@ interface ExtendedProduct extends Product {
   description?: string;
 }
 
+// Define a type for the raw product data from Supabase
+interface RawProductData {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category: string;
+  farmer_id: string | null;
+  image_url: string | null;
+  created_at: string;
+  quantity?: number; // Make it optional since it might not be in older records
+}
+
 const FarmerDashboard = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -64,7 +77,7 @@ const FarmerDashboard = () => {
         if (error) throw error;
 
         // Map the Supabase products to include the farmer data and ensure quantity is present
-        const productsWithFarmer = data.map(product => ({
+        const productsWithFarmer = data.map((product: RawProductData) => ({
           ...product,
           quantity: product.quantity || 0, // Use existing quantity or default to 0
           description: product.description || '', // Add description field
@@ -254,9 +267,9 @@ const FarmerDashboard = () => {
         setProducts(prev => [
           ...prev,
           {
-            ...data,
-            quantity: data.quantity || 0,
-            description: data.description || '',
+            ...data as RawProductData, // Cast to our RawProductData type
+            quantity: (data as any).quantity || 0,
+            description: (data as any).description || '',
             farmer: {
               id: user.id,
               name: profile?.full_name || 'Unknown Farmer',
@@ -271,7 +284,7 @@ const FarmerDashboard = () => {
                   }
                 : undefined
             },
-            image: data.image_url || '/placeholder.svg'
+            image: (data as any).image_url || '/placeholder.svg'
           }
         ]);
 
