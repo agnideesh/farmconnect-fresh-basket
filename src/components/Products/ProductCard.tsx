@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -127,6 +128,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 <Heart className="w-3 h-3" />
               </button>
               
+              {product.farmer.phone && (
+                <button 
+                  className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `tel:${product.farmer.phone}`;
+                  }}
+                >
+                  <Phone className="w-3 h-3 text-green-600" />
+                </button>
+              )}
+              
               <button 
                 className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-100"
                 onClick={(e) => {
@@ -164,7 +177,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               <div className="grid gap-2">
                 {product.farmer.phone && (
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <Phone className="h-4 w-4 text-green-600" />
                     <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
                   </div>
                 )}
@@ -252,6 +265,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <button className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors">
               <Heart className="w-4 h-4 text-foreground" />
             </button>
+            
+            {product.farmer.phone && (
+              <button 
+                className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.location.href = `tel:${product.farmer.phone}`;
+                }}
+              >
+                <Phone className="w-4 h-4 text-green-600" />
+              </button>
+            )}
+            
             <button 
               className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
               onClick={(e) => {
@@ -326,7 +352,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <div className="grid gap-2">
               {product.farmer.phone && (
                 <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <Phone className="h-4 w-4 text-green-600" />
                   <a href={`tel:${product.farmer.phone}`} className="text-sm hover:underline">{product.farmer.phone}</a>
                 </div>
               )}
