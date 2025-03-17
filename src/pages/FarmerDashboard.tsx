@@ -22,13 +22,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Product } from '@/components/Products/ProductCard';
 
+// Extend the Product interface from ProductCard to include description
+interface ExtendedProduct extends Product {
+  description?: string;
+}
+
 const FarmerDashboard = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ExtendedProduct[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -62,6 +67,7 @@ const FarmerDashboard = () => {
         const productsWithFarmer = data.map(product => ({
           ...product,
           quantity: product.quantity || 0, // Use existing quantity or default to 0
+          description: product.description || '', // Add description field
           farmer: {
             id: user.id,
             name: profile?.full_name || 'Unknown Farmer',
@@ -121,7 +127,7 @@ const FarmerDashboard = () => {
   };
 
   // Open dialog for editing product
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: ExtendedProduct) => {
     setIsEditMode(true);
     setProductForm({
       id: product.id,
@@ -250,6 +256,7 @@ const FarmerDashboard = () => {
           {
             ...data,
             quantity: data.quantity || 0,
+            description: data.description || '',
             farmer: {
               id: user.id,
               name: profile?.full_name || 'Unknown Farmer',
