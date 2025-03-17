@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Sun, Moon, MapPin, Lock, User, Phone, Loader2 } from 'lucide-react';
+import { Sun, Moon, MapPin, Lock, User, Phone, Loader2, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -42,7 +42,7 @@ type ProfileForm = z.infer<typeof profileSchema>;
 const Settings: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const queryClient = useQueryClient();
   
   // Theme state (check if user prefers dark theme)
@@ -216,6 +216,24 @@ const Settings: React.FC = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to update profile image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to log out",
         variant: "destructive",
       });
     }
@@ -429,6 +447,32 @@ const Settings: React.FC = () => {
                     </Button>
                   </form>
                 </Form>
+              </div>
+            )}
+            
+            {/* Logout Section */}
+            {user && (
+              <div className="bg-card rounded-lg shadow-sm p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <LogOut className="w-5 h-5" />
+                  Account
+                </h2>
+                
+                <div className="flex flex-col space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Sign out of your account
+                    </p>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleLogout}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
