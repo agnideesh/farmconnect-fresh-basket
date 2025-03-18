@@ -26,6 +26,11 @@ serve(async (req) => {
 
     console.log("Sending request to Gemini API with messages:", JSON.stringify(formattedMessages));
 
+    // Make sure we have at least one message
+    if (!formattedMessages.length) {
+      throw new Error("No messages provided");
+    }
+
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY, {
       method: 'POST',
       headers: {
@@ -42,14 +47,27 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Gemini API returned an error:", response.status, errorText);
+      throw new Error(`Gemini API returned status ${response.status}: ${errorText}`);
+    }
+
     const data = await response.json();
     console.log("Response from Gemini API:", JSON.stringify(data));
     
     if (data.error) {
+      console.error("Error in Gemini API response:", data.error);
       throw new Error(data.error.message || "Error from Gemini API");
     }
     
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response";
+    // Check if we have a valid response with candidates
+    if (!data.candidates || !data.candidates.length || !data.candidates[0].content) {
+      console.error("Invalid response format from Gemini API:", data);
+      throw new Error("Invalid response format from Gemini API");
+    }
+    
+    const reply = data.candidates[0].content.parts?.[0]?.text || "Sorry, I couldn't generate a response";
 
     return new Response(
       JSON.stringify({ reply }),
@@ -58,9 +76,9 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in Gemini chat function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
       { 
-        status: 500, 
+        status: 200, // Return 200 even for errors to avoid client-side fetch issues
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );

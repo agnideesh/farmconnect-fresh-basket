@@ -50,11 +50,15 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
         },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(error.message);
+      }
       
       if (data.error) {
+        console.error("Gemini API error:", data.error);
         toast({
-          title: "Error",
+          title: "AI Assistant Error",
           description: data.error,
           variant: "destructive",
         });
@@ -63,12 +67,12 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (error: any) {
+      console.error("Chat error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to get a response",
+        description: "Failed to get a response from the assistant. Please try again later.",
         variant: "destructive",
       });
-      console.error("Chat error:", error);
     } finally {
       setIsLoading(false);
     }
