@@ -14,19 +14,17 @@ serve(async (req) => {
   }
 
   try {
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const { messages, apiKey } = await req.json();
     
-    if (!GEMINI_API_KEY) {
+    if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY is not set" }),
+        JSON.stringify({ error: "Gemini API key is required" }),
         { 
-          status: 500, 
+          status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
-
-    const { messages } = await req.json();
 
     // Format messages for Gemini API
     const formattedMessages = messages.map((msg: any) => ({
@@ -34,7 +32,7 @@ serve(async (req) => {
       parts: [{ text: msg.content }]
     }));
 
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
