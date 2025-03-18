@@ -16,6 +16,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Settings from "./pages/Settings";
 import ThemeInitializer from "./components/ThemeInitializer";
+import ChatButton from "./components/Chat/ChatButton";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ChatButton />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
