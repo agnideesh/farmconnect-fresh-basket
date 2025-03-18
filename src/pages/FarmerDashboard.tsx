@@ -54,7 +54,8 @@ const FarmerDashboard = () => {
     description: '',
     price: 0,
     category: 'vegetables',
-    quantity: 0
+    quantity: 0,
+    image: ''
   });
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -123,7 +124,8 @@ const FarmerDashboard = () => {
       description: '',
       price: 0,
       category: 'vegetables',
-      quantity: 0
+      quantity: 0,
+      image: ''
     });
     setSelectedImage(null);
     setIsDialogOpen(true);
@@ -137,7 +139,8 @@ const FarmerDashboard = () => {
       description: product.description || '',
       price: product.price,
       category: product.category,
-      quantity: product.quantity || 0
+      quantity: product.quantity || 0,
+      image: product.image
     });
     setSelectedImage(null);
     setIsDialogOpen(true);
