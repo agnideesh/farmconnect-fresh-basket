@@ -2,6 +2,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const GEMINI_API_KEY = "AIzaSyBTafddLjrxI2oasWHIC-dVqCB7mvSNzAY";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -14,25 +16,15 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, apiKey } = await req.json();
+    const { messages } = await req.json();
     
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: "Gemini API key is required" }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
     // Format messages for Gemini API
     const formattedMessages = messages.map((msg: any) => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.content }]
     }));
 
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKey, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + GEMINI_API_KEY, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -15,10 +15,9 @@ type Message = {
 interface ChatDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  apiKey: string;
 }
 
-const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange, apiKey }) => {
+const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -47,8 +46,7 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange, apiKey }) =
       
       const { data, error } = await supabase.functions.invoke('gemini-chat', {
         body: { 
-          messages: chatHistory,
-          apiKey: apiKey 
+          messages: chatHistory
         },
       });
 
