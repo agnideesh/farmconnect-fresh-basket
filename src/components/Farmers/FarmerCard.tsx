@@ -1,9 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Tractor, Phone } from 'lucide-react';
+import { MapPin, Tractor, Phone, UserPlus, UserMinus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 export interface FarmerData {
   id: string;
@@ -20,11 +24,83 @@ export interface FarmerData {
 
 interface FarmerCardProps {
   farmer: FarmerData;
+  isFollowed?: boolean;
+  onFollowChange?: (farmerId: string, isFollowed: boolean) => void;
 }
 
 const defaultImage = "https://images.pexels.com/photos/4207783/pexels-photo-4207783.jpeg?auto=compress&cs=tinysrgb&w=800";
 
-const FarmerCard: React.FC<FarmerCardProps> = ({ farmer }) => {
+const FarmerCard: React.FC<FarmerCardProps> = ({ farmer, isFollowed = false, onFollowChange }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [following, setFollowing] = useState(isFollowed);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleFollow = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to follow farmers",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      if (following) {
+        // Unfollow the farmer
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('farmer_id', farmer.id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Unfollowed",
+          description: `You are no longer following ${farmer.full_name}`,
+        });
+      } else {
+        // Follow the farmer
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            user_id: user.id,
+            farmer_id: farmer.id,
+          });
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Following",
+          description: `You are now following ${farmer.full_name}`,
+        });
+      }
+      
+      // Toggle the following state
+      setFollowing(!following);
+      
+      // Notify parent component if callback provided
+      if (onFollowChange) {
+        onFollowChange(farmer.id, !following);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update follow status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <Link to={`/farmers/${farmer.id}`}>
       <Card className="h-full overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
@@ -41,6 +117,28 @@ const FarmerCard: React.FC<FarmerCardProps> = ({ farmer }) => {
               alt={farmer.full_name || 'Farmer'} 
               className="w-full h-full object-cover"
             />
+          )}
+          
+          {user && (
+            <Button
+              variant="outline"
+              size="sm"
+              className={`absolute top-3 right-3 bg-background/80 backdrop-blur-sm ${following ? 'border-green-500 text-green-600' : ''}`}
+              onClick={handleFollow}
+              disabled={isLoading}
+            >
+              {following ? (
+                <>
+                  <UserMinus className="mr-1 h-4 w-4" />
+                  Following
+                </>
+              ) : (
+                <>
+                  <UserPlus className="mr-1 h-4 w-4" />
+                  Follow
+                </>
+              )}
+            </Button>
           )}
         </div>
         <CardContent className="p-5">

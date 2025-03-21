@@ -10,14 +10,19 @@ import FarmerLocationMap from '@/components/Map/FarmerLocationMap';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, MapPin, Phone, Mail, Tractor, Leaf } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Phone, Mail, Tractor, Leaf, UserPlus, UserMinus } from 'lucide-react';
 import { FarmerData } from '@/components/Farmers/FarmerCard';
 import FadeInSection from '@/components/UI/FadeInSection';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 const FarmerProfile = () => {
   const { farmerId } = useParams<{ farmerId: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('products');
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   
   // Fetch farmer profile
   const { data: farmer, isLoading: isLoadingFarmer } = useQuery({
@@ -34,6 +39,25 @@ const FarmerProfile = () => {
       return data as FarmerData;
     },
     enabled: !!farmerId,
+  });
+  
+  // Check if user follows this farmer
+  const { data: isFollowing, refetch: refetchFollowStatus } = useQuery({
+    queryKey: ['isFollowing', user?.id, farmerId],
+    queryFn: async () => {
+      if (!user || !farmerId) return false;
+      
+      const { data, error } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('farmer_id', farmerId)
+        .maybeSingle();
+      
+      if (error) throw new Error(error.message);
+      return !!data;
+    },
+    enabled: !!user && !!farmerId,
   });
   
   // Fetch farmer products
@@ -69,6 +93,64 @@ const FarmerProfile = () => {
     },
     enabled: !!farmerId && !!farmer,
   });
+  
+  const handleFollowToggle = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to follow farmers",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    setIsFollowLoading(true);
+    
+    try {
+      if (isFollowing) {
+        // Unfollow the farmer
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('farmer_id', farmerId);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Unfollowed",
+          description: `You are no longer following ${farmer?.full_name}`,
+        });
+      } else {
+        // Follow the farmer
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            user_id: user.id,
+            farmer_id: farmerId,
+          });
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Following",
+          description: `You are now following ${farmer?.full_name}`,
+        });
+      }
+      
+      // Refetch the follow status
+      refetchFollowStatus();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update follow status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
   
   const isLoading = isLoadingFarmer || isLoadingProducts;
   
@@ -126,8 +208,32 @@ const FarmerProfile = () => {
                   <AvatarFallback className="text-2xl">{farmer.full_name?.charAt(0) || 'F'}</AvatarFallback>
                 </Avatar>
                 
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{farmer.full_name}</h1>
+                <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <h1 className="text-3xl font-bold mb-2">{farmer.full_name}</h1>
+                    
+                    {user && user.id !== farmer.id && (
+                      <Button
+                        variant={isFollowing ? "default" : "outline"}
+                        size="sm"
+                        onClick={handleFollowToggle}
+                        disabled={isFollowLoading}
+                        className="w-full sm:w-auto"
+                      >
+                        {isFollowing ? (
+                          <>
+                            <UserMinus className="mr-2 h-4 w-4" />
+                            Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Follow
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   
                   {farmer.location && (
                     <div className="flex items-center text-muted-foreground mb-2">

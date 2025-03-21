@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      follows: {
+        Row: {
+          created_at: string
+          farmer_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          farmer_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          farmer_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category: string
@@ -100,6 +121,28 @@ export type Database = {
       }
     }
     Views: {
+      followed_farmer_products: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          farmer_id: string | null
+          id: string | null
+          image_url: string | null
+          name: string | null
+          price: number | null
+          quantity: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products_with_farmer_details: {
         Row: {
           category: string | null
