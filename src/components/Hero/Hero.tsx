@@ -75,7 +75,7 @@ const Hero: React.FC = () => {
             <div className="relative">
               <div className="aspect-square w-full max-w-lg mx-auto overflow-hidden rounded-2xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1595855759920-87483ef743ec?q=80&w=800&auto=format&fit=crop"
+                  src="https://images.pexels.com/photos/11293790/pexels-photo-11293790.jpeg?auto=compress&cs=tinysrgb&w=800"
                   alt="Fresh farm produce" 
                   className="w-full h-full object-cover"
                 />
@@ -84,7 +84,7 @@ const Hero: React.FC = () => {
               {/* Decorative elements overlaid on the image */}
               <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-2xl overflow-hidden rotate-6 shadow-xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?q=80&w=400&auto=format&fit=crop"
+                  src="https://images.pexels.com/photos/2255905/pexels-photo-2255905.jpeg?auto=compress&cs=tinysrgb&w=400"
                   alt="Farmer with produce" 
                   className="w-full h-full object-cover"
                 />
@@ -92,7 +92,7 @@ const Hero: React.FC = () => {
               
               <div className="absolute -top-6 -right-6 w-32 h-32 rounded-2xl overflow-hidden -rotate-12 shadow-xl">
                 <img 
-                  src="https://images.unsplash.com/photo-1603169429624-da7c0513ae98?q=80&w=400&auto=format&fit=crop"
+                  src="https://images.pexels.com/photos/2751755/pexels-photo-2751755.jpeg?auto=compress&cs=tinysrgb&w=400"
                   alt="Fresh vegetables" 
                   className="w-full h-full object-cover"
                 />

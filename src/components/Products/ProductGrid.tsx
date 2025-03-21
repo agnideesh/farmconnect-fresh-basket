@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard, { Product } from './ProductCard';
 import { Search, MapPin, List, Grid as GridIcon } from 'lucide-react';
@@ -384,7 +383,7 @@ const sampleProducts: Product[] = [
         longitude: 77.5946
       }
     },
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 12,
     organic: true,
     native: false
@@ -405,7 +404,7 @@ const sampleProducts: Product[] = [
         longitude: 77.1734
       }
     },
-    image: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/70746/strawberries-red-fruit-royalty-free-70746.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 45,
     organic: true,
     native: true
@@ -426,7 +425,7 @@ const sampleProducts: Product[] = [
         longitude: 76.2673
       }
     },
-    image: 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/5505638/pexels-photo-5505638.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 22,
     organic: true,
     native: true
@@ -447,7 +446,7 @@ const sampleProducts: Product[] = [
         longitude: 76.9558
       }
     },
-    image: 'https://images.unsplash.com/photo-1604323990536-92b4ba30b351?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/1034440/pexels-photo-1034440.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 18,
     organic: false,
     native: true
@@ -468,7 +467,7 @@ const sampleProducts: Product[] = [
         longitude: 76.9366
       }
     },
-    image: 'https://images.unsplash.com/photo-1550406827-8c9689cd4025?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/47483/olive-oil-salad-dressing-cooking-olive-47483.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 30,
     organic: false,
     native: true
@@ -489,7 +488,7 @@ const sampleProducts: Product[] = [
         longitude: 77.5946
       }
     },
-    image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/2325843/pexels-photo-2325843.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 12,
     organic: true,
     native: true
@@ -510,7 +509,7 @@ const sampleProducts: Product[] = [
         longitude: 73.3120
       }
     },
-    image: 'https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/918643/pexels-photo-918643.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 55,
     organic: false,
     native: true
@@ -531,7 +530,7 @@ const sampleProducts: Product[] = [
         longitude: 76.2673
       }
     },
-    image: 'https://images.unsplash.com/photo-1628053473552-f3bcc2595051?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    image: 'https://images.pexels.com/photos/4207783/pexels-photo-4207783.jpeg?auto=compress&cs=tinysrgb&w=800',
     distance: 22,
     organic: true,
     native: false

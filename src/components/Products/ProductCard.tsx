@@ -50,6 +50,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
     longitude: 77.5946, // Bangalore coordinates as default
   };
 
+  const productImage = product.image || "https://images.pexels.com/photos/2749165/pexels-photo-2749165.jpeg?auto=compress&cs=tinysrgb&w=800";
+  const farmerAvatar = product.farmer.avatar || "https://images.pexels.com/photos/2382895/pexels-photo-2382895.jpeg?auto=compress&cs=tinysrgb&w=200";
   const farmerCoordinates = product.farmer.coordinates || defaultCoordinates;
   
   if (view === 'list') {
@@ -61,7 +63,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
         >
           <div className="relative h-auto w-24 sm:w-36 aspect-square shrink-0">
             <img 
-              src={product.image} 
+              src={productImage} 
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -101,7 +103,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-1 text-xs">
                 <Avatar className="h-5 w-5">
-                  <AvatarImage src={product.farmer.avatar} />
+                  <AvatarImage src={farmerAvatar} />
                   <AvatarFallback>{product.farmer.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <span>{product.farmer.name}</span>
@@ -172,7 +174,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <div className="flex flex-col space-y-4 py-4">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={product.farmer.avatar} alt={product.farmer.name} />
+                  <AvatarImage src={farmerAvatar} alt={product.farmer.name} />
                   <AvatarFallback>{product.farmer.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -248,7 +250,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           onClick={() => setShowFarmerDetails(true)}
         >
           <img 
-            src={product.image} 
+            src={productImage} 
             alt={product.name}
             className={cn(
               "w-full h-full object-cover transition-transform duration-700",
@@ -360,7 +362,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           <div className="flex flex-col space-y-4 py-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={product.farmer.avatar} alt={product.farmer.name} />
+                <AvatarImage src={farmerAvatar} alt={product.farmer.name} />
                 <AvatarFallback>{product.farmer.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>

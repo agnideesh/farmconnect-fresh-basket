@@ -22,6 +22,8 @@ interface FarmerCardProps {
   farmer: FarmerData;
 }
 
+const defaultImage = "https://images.pexels.com/photos/4207783/pexels-photo-4207783.jpeg?auto=compress&cs=tinysrgb&w=800";
+
 const FarmerCard: React.FC<FarmerCardProps> = ({ farmer }) => {
   return (
     <Link to={`/farmers/${farmer.id}`}>
@@ -34,13 +36,17 @@ const FarmerCard: React.FC<FarmerCardProps> = ({ farmer }) => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <Tractor size={48} className="text-primary/40" />
+            <img 
+              src={defaultImage} 
+              alt={farmer.full_name || 'Farmer'} 
+              className="w-full h-full object-cover"
+            />
           )}
         </div>
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="h-10 w-10 border-2 border-primary/10">
-              <AvatarImage src={farmer.avatar_url || undefined} />
+              <AvatarImage src={farmer.avatar_url || defaultImage} />
               <AvatarFallback>{farmer.full_name?.charAt(0) || 'F'}</AvatarFallback>
             </Avatar>
             <div>
