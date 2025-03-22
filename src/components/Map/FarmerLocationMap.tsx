@@ -22,6 +22,7 @@ interface FarmerLocationMapProps {
   className?: string;
   interactiveMap?: boolean;
   zoom?: number;
+  height?: string;
 }
 
 const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
@@ -30,6 +31,7 @@ const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
   className = '',
   interactiveMap = true,
   zoom = 12,
+  height = 'h-64',
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -110,7 +112,7 @@ const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
   }, [location, farmerName, interactiveMap, zoom]);
 
   return (
-    <div ref={mapContainer} className={`h-64 rounded-lg overflow-hidden ${className}`} />
+    <div ref={mapContainer} className={`${height} rounded-lg overflow-hidden ${className}`} />
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -581,76 +582,93 @@ const FarmerDashboard = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="location">Product Location</Label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm"
-                  onClick={getProductLocation}
-                  disabled={locationState.loading}
-                  className="flex items-center gap-1"
-                >
-                  {locationState.loading ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Detecting...
-                    </>
-                  ) : (
-                    <>
-                      <MapPin className="h-3 w-3" />
-                      {productForm.latitude && productForm.longitude 
-                        ? 'Update Location' 
-                        : 'Get Current Location'}
-                    </>
-                  )}
-                </Button>
-              </div>
-              
-              {locationState.error && (
-                <Alert variant="destructive" className="mt-2 py-2">
-                  <AlertDescription>{locationState.error}</AlertDescription>
-                </Alert>
-              )}
-              
-              {productForm.latitude && productForm.longitude && (
-                <div className="mt-2 p-3 bg-muted rounded-md text-sm">
-                  <div className="flex justify-between">
-                    <span>Latitude: {productForm.latitude.toFixed(6)}</span>
-                    <span>Longitude: {productForm.longitude.toFixed(6)}</span>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    Location data will help customers find your products based on their proximity.
-                  </div>
+            {/* Restructured form into two columns for better space usage */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Left column: Location section */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="location">Product Location</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={getProductLocation}
+                    disabled={locationState.loading}
+                    className="flex items-center gap-1"
+                  >
+                    {locationState.loading ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Detecting...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="h-3 w-3" />
+                        {productForm.latitude && productForm.longitude 
+                          ? 'Update Location' 
+                          : 'Get Current Location'}
+                      </>
+                    )}
+                  </Button>
                 </div>
-              )}
-            </div>
+                
+                {locationState.error && (
+                  <Alert variant="destructive" className="mt-2 py-2">
+                    <AlertDescription>{locationState.error}</AlertDescription>
+                  </Alert>
+                )}
+                
+                {productForm.latitude && productForm.longitude && (
+                  <div className="mt-2 p-3 bg-muted rounded-md text-sm">
+                    <div className="flex justify-between">
+                      <span>Latitude: {productForm.latitude.toFixed(6)}</span>
+                      <span>Longitude: {productForm.longitude.toFixed(6)}</span>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Location data helps customers find nearby products.
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="image">Product Image</Label>
-              <div className="flex items-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('image-upload')?.click()}
-                >
-                  Choose Image
-                </Button>
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-                <span className="text-sm text-muted-foreground">
-                  {selectedImage ? selectedImage.name : isEditMode ? 'Current image' : 'No image selected'}
-                </span>
+              {/* Right column: Image upload section */}
+              <div className="space-y-2">
+                <Label htmlFor="image">Product Image</Label>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                    className="w-full"
+                  >
+                    Choose Image
+                  </Button>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                  <div className="text-sm text-muted-foreground truncate">
+                    {selectedImage ? selectedImage.name : isEditMode ? 'Current image' : 'No image selected'}
+                  </div>
+                  
+                  {/* Preview the selected image if available */}
+                  {(selectedImage || (isEditMode && productForm.image)) && (
+                    <div className="mt-2 border rounded-md overflow-hidden h-20">
+                      <img 
+                        src={selectedImage ? URL.createObjectURL(selectedImage) : productForm.image}
+                        className="w-full h-full object-cover" 
+                        alt="Product preview"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="mt-6">
               <Button
                 type="button"
                 variant="outline"
