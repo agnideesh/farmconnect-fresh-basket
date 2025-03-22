@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +5,7 @@ import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Loader2, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -22,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Product } from '@/components/Products/ProductCard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import FarmerLocationMap from '@/components/Map/FarmerLocationMap';
 
 interface ExtendedProduct extends Product {
   description?: string;
@@ -501,7 +501,7 @@ const FarmerDashboard = () => {
       </main>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{isEditMode ? 'Edit Product' : 'Add New Product'}</DialogTitle>
             <DialogDescription>
@@ -511,116 +511,165 @@ const FarmerDashboard = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Product Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={productForm.name}
-                onChange={handleFormChange}
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              <div className="md:col-span-8 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Product Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={productForm.name}
+                    onChange={handleFormChange}
+                    required
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={productForm.description}
-                onChange={handleFormChange}
-                rows={3}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={productForm.description}
+                    onChange={handleFormChange}
+                    rows={3}
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Price (₹/kg)</Label>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={productForm.price || ''}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity (kg)</Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={productForm.quantity || ''}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (₹/kg)</Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={productForm.price || ''}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantity (kg)</Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={productForm.quantity || ''}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={productForm.category}
-                onValueChange={handleCategoryChange}
-              >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="vegetables">Vegetables</SelectItem>
-                  <SelectItem value="fruits">Fruits</SelectItem>
-                  <SelectItem value="herbs">Herbs</SelectItem>
-                  <SelectItem value="flowers">Flowers</SelectItem>
-                  <SelectItem value="byproducts">Byproducts</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Restructured form into two columns for better space usage */}
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Left column: Location section */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="location">Product Location</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm"
-                    onClick={getProductLocation}
-                    disabled={locationState.loading}
-                    className="flex items-center gap-1"
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={productForm.category}
+                    onValueChange={handleCategoryChange}
                   >
-                    {locationState.loading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Detecting...
-                      </>
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vegetables">Vegetables</SelectItem>
+                      <SelectItem value="fruits">Fruits</SelectItem>
+                      <SelectItem value="herbs">Herbs</SelectItem>
+                      <SelectItem value="flowers">Flowers</SelectItem>
+                      <SelectItem value="byproducts">Byproducts</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="md:col-span-4 flex flex-col">
+                <div className="bg-muted/30 border rounded-lg p-4 h-full flex flex-col">
+                  <Label className="mb-2">Product Image</Label>
+                  
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-md bg-background flex-1 flex flex-col items-center justify-center p-4 mb-3 overflow-hidden cursor-pointer hover:border-primary/50 transition-colors" 
+                       onClick={() => document.getElementById('image-upload')?.click()}>
+                    
+                    {(selectedImage || (isEditMode && productForm.image)) ? (
+                      <div className="w-full h-full flex-1 flex items-center justify-center relative">
+                        <img 
+                          src={selectedImage ? URL.createObjectURL(selectedImage) : productForm.image}
+                          className="max-w-full max-h-[140px] object-contain shadow-sm rounded" 
+                          alt="Product preview"
+                        />
+                        <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                          <p className="text-white bg-black/70 px-2 py-1 rounded text-xs">Change image</p>
+                        </div>
+                      </div>
                     ) : (
                       <>
-                        <MapPin className="h-3 w-3" />
-                        {productForm.latitude && productForm.longitude 
-                          ? 'Update Location' 
-                          : 'Get Current Location'}
+                        <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground text-center">
+                          Drag & drop an image or click to select
+                        </p>
                       </>
                     )}
-                  </Button>
+                    
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedImage 
+                      ? `Selected: ${selectedImage.name}` 
+                      : isEditMode && productForm.image 
+                        ? "Current image will be used" 
+                        : "No image selected yet"}
+                  </p>
                 </div>
-                
-                {locationState.error && (
-                  <Alert variant="destructive" className="mt-2 py-2">
-                    <AlertDescription>{locationState.error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                {productForm.latitude && productForm.longitude && (
-                  <div className="mt-2 p-3 bg-muted rounded-md text-sm">
-                    <div className="flex justify-between">
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="location">Product Location</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={getProductLocation}
+                  disabled={locationState.loading}
+                  className="flex items-center gap-1"
+                >
+                  {locationState.loading ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Detecting...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-3 w-3" />
+                      {productForm.latitude && productForm.longitude 
+                        ? 'Update Location' 
+                        : 'Get Current Location'}
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {locationState.error && (
+                <Alert variant="destructive" className="mt-2 py-2">
+                  <AlertDescription>{locationState.error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {productForm.latitude && productForm.longitude && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-2">
+                  <div className="md:col-span-4 p-3 bg-muted rounded-md text-sm">
+                    <div className="mb-1">Location coordinates:</div>
+                    <div className="flex flex-col space-y-1">
                       <span>Latitude: {productForm.latitude.toFixed(6)}</span>
                       <span>Longitude: {productForm.longitude.toFixed(6)}</span>
                     </div>
@@ -628,47 +677,23 @@ const FarmerDashboard = () => {
                       Location data helps customers find nearby products.
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Right column: Image upload section */}
-              <div className="space-y-2">
-                <Label htmlFor="image">Product Image</Label>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                    className="w-full"
-                  >
-                    Choose Image
-                  </Button>
-                  <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                  <div className="text-sm text-muted-foreground truncate">
-                    {selectedImage ? selectedImage.name : isEditMode ? 'Current image' : 'No image selected'}
+                  <div className="md:col-span-8">
+                    <FarmerLocationMap 
+                      location={{
+                        latitude: productForm.latitude,
+                        longitude: productForm.longitude
+                      }}
+                      farmerName={profile?.full_name || "Your Location"}
+                      interactiveMap={false}
+                      zoom={14}
+                      height="h-32"
+                    />
                   </div>
-                  
-                  {/* Preview the selected image if available */}
-                  {(selectedImage || (isEditMode && productForm.image)) && (
-                    <div className="mt-2 border rounded-md overflow-hidden h-20">
-                      <img 
-                        src={selectedImage ? URL.createObjectURL(selectedImage) : productForm.image}
-                        className="w-full h-full object-cover" 
-                        alt="Product preview"
-                      />
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="mt-6 pt-2 border-t">
               <Button
                 type="button"
                 variant="outline"
