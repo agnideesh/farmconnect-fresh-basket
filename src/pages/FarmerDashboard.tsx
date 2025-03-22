@@ -5,7 +5,7 @@ import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, MapPin } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Product } from '@/components/Products/ProductCard';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ExtendedProduct extends Product {
   description?: string;
@@ -35,6 +36,15 @@ interface RawProductData {
   image_url: string | null;
   created_at: string;
   quantity?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface LocationState {
+  latitude: number | null;
+  longitude: number | null;
+  loading: boolean;
+  error: string | null;
 }
 
 const FarmerDashboard = () => {
@@ -55,10 +65,18 @@ const FarmerDashboard = () => {
     price: 0,
     category: 'vegetables',
     quantity: 0,
-    image: ''
+    image: '',
+    latitude: null as number | null,
+    longitude: null as number | null
   });
 
   const [isEditMode, setIsEditMode] = useState(false);
+  const [locationState, setLocationState] = useState<LocationState>({
+    latitude: null,
+    longitude: null,
+    loading: false,
+    error: null
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -76,6 +94,9 @@ const FarmerDashboard = () => {
           ...product,
           quantity: product.quantity || 0,
           description: product.description || '',
+          coordinates: product.latitude && product.longitude 
+            ? { latitude: product.latitude, longitude: product.longitude } 
+            : undefined,
           farmer: {
             id: user.id,
             name: profile?.full_name || 'Unknown Farmer',
@@ -116,6 +137,77 @@ const FarmerDashboard = () => {
     }
   };
 
+  const getProductLocation = () => {
+    if (locationState.latitude && locationState.longitude) {
+      setProductForm(prev => ({
+        ...prev,
+        latitude: locationState.latitude,
+        longitude: locationState.longitude
+      }));
+      return;
+    }
+
+    setLocationState(prev => ({ ...prev, loading: true, error: null }));
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        setLocationState({
+          latitude,
+          longitude,
+          loading: false,
+          error: null
+        });
+        
+        setProductForm(prev => ({
+          ...prev,
+          latitude,
+          longitude
+        }));
+        
+        toast({
+          title: 'Location detected',
+          description: 'Your current location has been added to this product.',
+        });
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        
+        let errorMessage = 'Could not access your location.';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.';
+            break;
+        }
+        
+        setLocationState({
+          latitude: null,
+          longitude: null,
+          loading: false,
+          error: errorMessage
+        });
+        
+        toast({
+          title: 'Location error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   const handleAddProduct = () => {
     setIsEditMode(false);
     setProductForm({
@@ -125,7 +217,9 @@ const FarmerDashboard = () => {
       price: 0,
       category: 'vegetables',
       quantity: 0,
-      image: ''
+      image: '',
+      latitude: null,
+      longitude: null
     });
     setSelectedImage(null);
     setIsDialogOpen(true);
@@ -140,7 +234,9 @@ const FarmerDashboard = () => {
       price: product.price,
       category: product.category,
       quantity: product.quantity || 0,
-      image: product.image
+      image: product.image,
+      latitude: product.coordinates?.latitude || null,
+      longitude: product.coordinates?.longitude || null
     });
     setSelectedImage(null);
     setIsDialogOpen(true);
@@ -194,17 +290,23 @@ const FarmerDashboard = () => {
         imageUrl = await uploadImage(selectedImage);
       }
 
+      const productData = {
+        name: productForm.name,
+        description: productForm.description,
+        price: productForm.price,
+        category: productForm.category,
+        quantity: productForm.quantity,
+        ...(productForm.latitude && productForm.longitude ? { 
+          latitude: productForm.latitude,
+          longitude: productForm.longitude 
+        } : {}),
+        ...(imageUrl ? { image_url: imageUrl } : {})
+      };
+
       if (isEditMode) {
         const { error } = await supabase
           .from('products')
-          .update({
-            name: productForm.name,
-            description: productForm.description,
-            price: productForm.price,
-            category: productForm.category,
-            quantity: productForm.quantity,
-            ...(imageUrl ? { image_url: imageUrl } : {})
-          })
+          .update(productData)
           .eq('id', productForm.id);
 
         if (error) throw error;
@@ -219,6 +321,9 @@ const FarmerDashboard = () => {
                   price: productForm.price,
                   category: productForm.category,
                   quantity: productForm.quantity,
+                  coordinates: productForm.latitude && productForm.longitude 
+                    ? { latitude: productForm.latitude, longitude: productForm.longitude } 
+                    : p.coordinates,
                   image: imageUrl || p.image
                 }
               : p
@@ -233,13 +338,8 @@ const FarmerDashboard = () => {
         const { data, error } = await supabase
           .from('products')
           .insert({
-            name: productForm.name,
-            description: productForm.description,
-            price: productForm.price,
-            category: productForm.category,
-            quantity: productForm.quantity,
+            ...productData,
             farmer_id: user.id,
-            image_url: imageUrl
           })
           .select('*')
           .single();
@@ -252,6 +352,9 @@ const FarmerDashboard = () => {
             ...data as RawProductData,
             quantity: (data as any).quantity || 0,
             description: (data as any).description || '',
+            coordinates: (data as any).latitude && (data as any).longitude 
+              ? { latitude: (data as any).latitude, longitude: (data as any).longitude } 
+              : undefined,
             farmer: {
               id: user.id,
               name: profile?.full_name || 'Unknown Farmer',
@@ -476,6 +579,52 @@ const FarmerDashboard = () => {
                   <SelectItem value="byproducts">Byproducts</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="location">Product Location</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={getProductLocation}
+                  disabled={locationState.loading}
+                  className="flex items-center gap-1"
+                >
+                  {locationState.loading ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Detecting...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-3 w-3" />
+                      {productForm.latitude && productForm.longitude 
+                        ? 'Update Location' 
+                        : 'Get Current Location'}
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {locationState.error && (
+                <Alert variant="destructive" className="mt-2 py-2">
+                  <AlertDescription>{locationState.error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {productForm.latitude && productForm.longitude && (
+                <div className="mt-2 p-3 bg-muted rounded-md text-sm">
+                  <div className="flex justify-between">
+                    <span>Latitude: {productForm.latitude.toFixed(6)}</span>
+                    <span>Longitude: {productForm.longitude.toFixed(6)}</span>
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Location data will help customers find your products based on their proximity.
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

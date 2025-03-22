@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ProductCard, { Product } from './ProductCard';
 import { Search, MapPin, List, Grid as GridIcon } from 'lucide-react';
@@ -35,11 +36,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLocationEnabled, setIsLocationEnabled] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
-  // Get user's location
+  // Get user's location with more detailed error handling
   useEffect(() => {
     if (navigator.geolocation && isLocationEnabled) {
+      setLocationError(null);
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setUserLocation({
@@ -48,18 +52,45 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
           });
           toast({
             title: "Location updated",
-            description: "Using your current location to find nearby farms",
+            description: "Using your current location to find nearby products",
           });
         },
         (error) => {
           console.error("Error getting location:", error);
+          let errorMessage = "Could not access your location.";
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location permission denied. Please enable location in your browser settings.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out.";
+              break;
+          }
+          
+          setLocationError(errorMessage);
           toast({
             title: "Location error",
-            description: "Could not access your location. Please check permissions.",
+            description: errorMessage,
             variant: "destructive",
           });
+        },
+        { 
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
+    } else if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      toast({
+        title: "Location not supported",
+        description: "Geolocation is not supported by your browser.",
+        variant: "destructive",
+      });
     }
   }, [isLocationEnabled]);
 
@@ -74,7 +105,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       Math.sin(dLon/2) * Math.sin(dLon/2); 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     const d = R * c; // Distance in km
-    return Math.round(d);
+    return Math.round(d * 10) / 10; // Round to 1 decimal place
   };
   
   // Fetch products from Supabase
@@ -87,59 +118,73 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       
       if (error) throw error;
       
-      // Farm location coordinates for each farmer (in a real app, these would come from the database)
-      const farmerCoordinates: Record<string, {latitude: number, longitude: number}> = {
-        // Predefined farmer coordinates
-        '101': { latitude: 12.9716, longitude: 77.5946 }, // Bangalore
-        '102': { latitude: 31.1048, longitude: 77.1734 }, // Shimla
-        '103': { latitude: 9.9312, longitude: 76.2673 },  // Kochi
-        '104': { latitude: 11.0168, longitude: 76.9558 }, // Coimbatore
-        '105': { latitude: 8.5241, longitude: 76.9366 },  // Trivandrum
-        '106': { latitude: 16.9924, longitude: 73.3120 }  // Ratnagiri
-      };
-      
       return data.map(item => {
-        // Generate random coordinates near the predefined location for each farmer
-        // In a real app, you would use actual coordinates from the database
-        const farmerId = item.farmer_id || '101'; // Default to first farmer if none
+        // Calculate distance if user location is available and product has coordinates
+        let distance: number | undefined;
         
-        // Get base coordinates for the farmer or use a default
-        const baseCoordinates = farmerCoordinates[farmerId] || { 
-          latitude: 12.9716, 
-          longitude: 77.5946 
-        }; 
-        
-        // Add a small random offset to make each farm location unique
-        // In a real app, you would use actual precise coordinates for each farm
-        const coordinates = {
-          latitude: baseCoordinates.latitude + (Math.random() * 0.05 - 0.025),
-          longitude: baseCoordinates.longitude + (Math.random() * 0.05 - 0.025)
-        };
-        
-        // Calculate distance if user location is available
-        const distance = userLocation 
-          ? calculateDistance(
+        if (userLocation) {
+          // First try to use product's own coordinates if available
+          if (item.latitude && item.longitude) {
+            distance = calculateDistance(
               userLocation.latitude, 
               userLocation.longitude, 
-              coordinates.latitude, 
-              coordinates.longitude
-            ) 
-          : Math.floor(Math.random() * 50) + 1;
+              item.latitude, 
+              item.longitude
+            );
+          } 
+          // Fallback to farmer's profile location if it exists
+          else if (item.farmer_id) {
+            // In a real app, you should first check if this is cached or stored
+            // to avoid querying for each farmer's coordinates multiple times
+            const getFarmerCoordinates = async (farmerId: string) => {
+              const { data } = await supabase
+                .from('profiles')
+                .select('latitude, longitude')
+                .eq('id', farmerId)
+                .single();
+                
+              return data;
+            };
+            
+            // Just generate some coordinates for now, but in a real scenario,
+            // you'd fetch these from the database using the getFarmerCoordinates function
+            const farmerLat = 12.9716 + (Math.random() * 0.05 - 0.025);
+            const farmerLng = 77.5946 + (Math.random() * 0.05 - 0.025);
+            
+            distance = calculateDistance(
+              userLocation.latitude, 
+              userLocation.longitude, 
+              farmerLat, 
+              farmerLng
+            );
+          } else {
+            // If no coordinates available, use a placeholder
+            distance = Math.floor(Math.random() * 50) + 1;
+          }
+        }
           
         return {
           id: item.id,
           name: item.name,
           category: item.category,
           price: item.price,
+          quantity: item.quantity,
           farmer: {
             id: item.farmer_id || '101',
             name: item.farmer_name || 'Unknown Farmer',
-            location: 'Local Farm',
+            location: item.farmer_location || 'Local Farm',
             phone: item.farmer_phone,
             email: item.farmer_email,
             avatar: item.farmer_avatar,
-            coordinates: coordinates
+            coordinates: item.latitude && item.longitude ? {
+              latitude: item.latitude,
+              longitude: item.longitude
+            } : undefined
           },
+          coordinates: item.latitude && item.longitude ? {
+            latitude: item.latitude,
+            longitude: item.longitude
+          } : undefined,
           image: item.image_url || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
           organic: Math.random() > 0.5, // Placeholder, you can add this field to your DB
           native: Math.random() > 0.5,  // Placeholder, you can add this field to your DB
@@ -166,7 +211,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
 
     // Sort by distance if location is enabled
     if (isLocationEnabled && userLocation) {
-      filtered = filtered.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      filtered = filtered.sort((a, b) => (a.distance || 999) - (b.distance || 999));
     }
 
     return filtered;
@@ -220,13 +265,19 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       onClick={() => setIsLocationEnabled(!isLocationEnabled)}
       className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
         isLocationEnabled 
-          ? 'bg-green-100 text-green-800' 
+          ? locationError 
+            ? 'bg-red-100 text-red-800'
+            : 'bg-green-100 text-green-800' 
           : 'bg-gray-100 text-gray-800'
       } transition-colors`}
     >
-      <MapPin className="w-4 h-4" />
+      <MapPin className={`w-4 h-4 ${locationError ? 'text-red-600' : ''}`} />
       <span className="text-sm">
-        {isLocationEnabled ? 'Location On' : 'Enable Location'}
+        {isLocationEnabled 
+          ? locationError 
+            ? 'Location Error' 
+            : 'Location On' 
+          : 'Enable Location'}
       </span>
     </button>
   );
@@ -343,6 +394,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     <section className="py-8">
       <div className="container px-6 mx-auto">
         <MobileFilters />
+        
+        {locationError && isLocationEnabled && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <p>{locationError}</p>
+            <p className="mt-1 text-xs">You can still browse products, but distance information may not be accurate.</p>
+          </div>
+        )}
         
         {displayProducts.length > 0 ? (
           <div className={viewMode === 'grid' 

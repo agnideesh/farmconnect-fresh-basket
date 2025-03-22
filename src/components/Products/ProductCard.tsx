@@ -34,6 +34,10 @@ export interface Product {
   distance?: number; // in km
   organic?: boolean;
   native?: boolean;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface ProductCardProps {
@@ -52,7 +56,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
 
   const productImage = product.image || "https://images.pexels.com/photos/2749165/pexels-photo-2749165.jpeg?auto=compress&cs=tinysrgb&w=800";
   const farmerAvatar = product.farmer.avatar || "https://images.pexels.com/photos/2382895/pexels-photo-2382895.jpeg?auto=compress&cs=tinysrgb&w=200";
-  const farmerCoordinates = product.farmer.coordinates || defaultCoordinates;
+  
+  const productCoordinates = product.coordinates || product.farmer.coordinates || defaultCoordinates;
   
   if (view === 'list') {
     return (
@@ -111,7 +116,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               
               <div className="flex items-center gap-1 text-xs">
                 <MapPin className="h-3 w-3 text-muted-foreground" />
-                <span>{product.distance || 0} km</span>
+                <span className="font-medium">{product.distance !== undefined ? `${product.distance} km away` : 'Location unavailable'}</span>
               </div>
             </div>
             
@@ -205,12 +210,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                   Farm Location
                 </h4>
                 <FarmerLocationMap 
-                  location={farmerCoordinates}
+                  location={productCoordinates}
                   farmerName={product.farmer.name}
                 />
                 <div className="flex justify-between mt-2">
                   <span className="text-xs text-muted-foreground">{product.farmer.location}</span>
-                  {product.distance && (
+                  {product.distance !== undefined && (
                     <span className="text-xs flex items-center gap-1">
                       <Navigation className="h-3 w-3" />
                       {product.distance} km away
@@ -335,7 +340,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               </div>
               <div className="flex flex-col items-end">
                 <span className="text-xs text-muted-foreground">Distance</span>
-                <span className="text-sm">{product.distance || 0} km</span>
+                <span className="text-sm font-medium">{product.distance !== undefined ? `${product.distance} km` : 'N/A'}</span>
               </div>
             </div>
             
@@ -393,12 +398,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
                 Farm Location
               </h4>
               <FarmerLocationMap 
-                location={farmerCoordinates}
+                location={productCoordinates}
                 farmerName={product.farmer.name}
               />
               <div className="flex justify-between mt-2">
                 <span className="text-xs text-muted-foreground">{product.farmer.location}</span>
-                {product.distance && (
+                {product.distance !== undefined && (
                   <span className="text-xs flex items-center gap-1">
                     <Navigation className="h-3 w-3" />
                     {product.distance} km away

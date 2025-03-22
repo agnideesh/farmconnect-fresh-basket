@@ -38,6 +38,8 @@ export type Database = {
           farmer_id: string | null
           id: string
           image_url: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           price: number
           quantity: number | null
@@ -49,6 +51,8 @@ export type Database = {
           farmer_id?: string | null
           id?: string
           image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
           price: number
           quantity?: number | null
@@ -60,6 +64,8 @@ export type Database = {
           farmer_id?: string | null
           id?: string
           image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           price?: number
           quantity?: number | null
@@ -151,12 +157,16 @@ export type Database = {
           farmer_avatar: string | null
           farmer_email: string | null
           farmer_id: string | null
+          farmer_location: string | null
           farmer_name: string | null
           farmer_phone: string | null
           id: string | null
           image_url: string | null
+          latitude: number | null
+          longitude: number | null
           name: string | null
           price: number | null
+          quantity: number | null
         }
         Relationships: [
           {

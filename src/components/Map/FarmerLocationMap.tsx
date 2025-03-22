@@ -21,6 +21,7 @@ interface FarmerLocationMapProps {
   farmerName: string;
   className?: string;
   interactiveMap?: boolean;
+  zoom?: number;
 }
 
 const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
@@ -28,6 +29,7 @@ const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
   farmerName,
   className = '',
   interactiveMap = true,
+  zoom = 12,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -43,7 +45,7 @@ const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
       center: [location.longitude, location.latitude],
-      zoom: 12,
+      zoom: zoom,
       interactive: interactiveMap,
     });
 
@@ -66,13 +68,46 @@ const FarmerLocationMap: React.FC<FarmerLocationMapProps> = ({
       });
     });
 
+    // Create a simulated route to the point (for visual interest)
+    if (interactiveMap) {
+      map.current.on('load', () => {
+        if (!map.current) return;
+        
+        // Add a circle showing approximate area
+        map.current.addSource('area-source', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'Point',
+              coordinates: [location.longitude, location.latitude]
+            }
+          }
+        });
+        
+        map.current.addLayer({
+          id: 'area-layer',
+          type: 'circle',
+          source: 'area-source',
+          paint: {
+            'circle-radius': 100,
+            'circle-color': '#10b981',
+            'circle-opacity': 0.15,
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#10b981'
+          }
+        });
+      });
+    }
+
     // Cleanup function
     return () => {
       if (map.current) {
         map.current.remove();
       }
     };
-  }, [location, farmerName, interactiveMap]);
+  }, [location, farmerName, interactiveMap, zoom]);
 
   return (
     <div ref={mapContainer} className={`h-64 rounded-lg overflow-hidden ${className}`} />
