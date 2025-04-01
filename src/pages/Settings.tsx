@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -69,12 +70,24 @@ const Settings: React.FC = () => {
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      full_name: profile?.full_name || '',
-      phone_number: profile?.phone_number || '',
-      location: profile?.location || '',
-      bio: profile?.bio || '',
+      full_name: '',
+      phone_number: '',
+      location: '',
+      bio: '',
     },
   });
+
+  // Update profile data when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      profileForm.reset({
+        full_name: profile.full_name || '',
+        phone_number: profile.phone_number || '',
+        location: profile.location || '',
+        bio: profile.bio || '',
+      });
+    }
+  }, [profile, profileForm]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
@@ -287,7 +300,7 @@ const Settings: React.FC = () => {
                         <FormItem>
                           <FormLabel>Phone Number</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} value={field.value || ''} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -301,7 +314,7 @@ const Settings: React.FC = () => {
                         <FormItem>
                           <FormLabel>Location</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} value={field.value || ''} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -317,6 +330,7 @@ const Settings: React.FC = () => {
                           <FormControl>
                             <Textarea
                               {...field}
+                              value={field.value || ''}
                               className="min-h-[120px] resize-y"
                               placeholder="Tell us something about yourself..."
                             />

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -33,6 +34,7 @@ interface AuthContextType {
     } 
   }) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,22 +45,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Use setTimeout to prevent potential authentication deadlocks
+        setTimeout(() => {
+          fetchProfile(session.user.id);
+        }, 0);
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
+    });
+
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
         setLoading(false);
       }
     });
@@ -89,6 +95,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshProfile = async (userId: string) => {
+    if (!userId) return;
+    await fetchProfile(userId);
   };
 
   const signUp = async ({ email, password, options }: { 
@@ -126,7 +137,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      profile, 
+      loading, 
+      signIn, 
+      signUp, 
+      signOut, 
+      refreshProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );
