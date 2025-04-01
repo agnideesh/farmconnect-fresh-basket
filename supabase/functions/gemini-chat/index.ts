@@ -31,7 +31,7 @@ serve(async (req) => {
       throw new Error("No messages provided");
     }
 
-    // Updated URL to use the correct API version and model
+    // Using the gemini-1.5-flash model which is known to work reliably
     const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY, {
       method: 'POST',
       headers: {

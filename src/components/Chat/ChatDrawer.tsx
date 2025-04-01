@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Drawer, DrawerClose, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, X, Bot, User } from "lucide-react";
+import { Send, X, Bot, User, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +21,7 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -39,6 +40,7 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setIsError(false);
 
     try {
       // Add all previous messages for context
@@ -52,11 +54,13 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
 
       if (error) {
         console.error("Supabase function error:", error);
+        setIsError(true);
         throw new Error(error.message);
       }
       
       if (data.error) {
         console.error("Gemini API error:", data.error);
+        setIsError(true);
         toast({
           title: "AI Assistant Error",
           description: data.error,
@@ -68,6 +72,7 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (error: any) {
       console.error("Chat error:", error);
+      setIsError(true);
       toast({
         title: "Error",
         description: "Failed to get a response from the assistant. Please try again later.",
@@ -135,6 +140,29 @@ const ChatDrawer: React.FC<ChatDrawerProps> = ({ open, onOpenChange }) => {
                 </div>
               </div>
             ))
+          )}
+          {isError && (
+            <div className="flex justify-center my-2">
+              <div className="bg-destructive/10 text-destructive rounded-md p-2 flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                <span>There was an error connecting to the assistant. Please try again.</span>
+              </div>
+            </div>
+          )}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-muted rounded-lg p-3 max-w-[80%]">
+                <div className="flex items-center gap-2 mb-1 text-xs opacity-80">
+                  <Bot className="w-3 h-3" />
+                  <span>Assistant</span>
+                </div>
+                <div className="flex space-x-2 items-center h-6">
+                  <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
