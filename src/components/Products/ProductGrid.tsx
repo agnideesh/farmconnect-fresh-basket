@@ -21,6 +21,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
 
 interface ProductGridProps {
   selectedCategory: string;
@@ -309,15 +310,15 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
           </button>
         </div>
         
-        {/* Search */}
+        {/* Search - Fixed by using Input component */}
         <div className="relative w-full sm:w-auto">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 pointer-events-none">
             <Search className="w-4 h-4 text-muted-foreground" />
           </div>
-          <input
+          <Input
             type="text"
             placeholder="Search products or farmers..."
-            className="w-full sm:w-64 pl-10 pr-4 py-2 border border-border rounded-lg bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full sm:w-64 pl-10 pr-4 py-2"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -345,14 +346,15 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
                 <SheetTitle>Search & Filters</SheetTitle>
               </SheetHeader>
               <div className="py-4 space-y-4">
+                {/* Fixed search input in mobile view */}
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 pointer-events-none">
                     <Search className="w-4 h-4 text-muted-foreground" />
                   </div>
-                  <input
+                  <Input
                     type="text"
                     placeholder="Search products or farmers..."
-                    className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-white/50 focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full pl-10 pr-4 py-2"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
