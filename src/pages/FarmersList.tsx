@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +46,9 @@ const FarmersList = () => {
         </FadeInSection>
         
         <div className="relative max-w-md mx-auto mb-8">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <Search className="w-4 h-4" />
+          </div>
           <Input
             placeholder="Search by name, location, or specialty..."
             className="pl-10"
@@ -55,6 +56,8 @@ const FarmersList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        
+        
         
         {isLoading ? (
           <div className="flex justify-center items-center py-16">
