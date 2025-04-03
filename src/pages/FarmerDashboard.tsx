@@ -6,7 +6,7 @@ import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon, Users, ChartBarIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -26,6 +26,7 @@ import FarmerLocationMap from '@/components/Map/FarmerLocationMap';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import MarketPrices from '@/components/Market/MarketPrices';
 
 interface ExtendedProduct extends Product {
   description?: string;
@@ -527,6 +528,10 @@ const FarmerDashboard = () => {
                 </span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="market-prices" className="flex items-center gap-1">
+              <DollarSign className="w-4 h-4" />
+              Market Prices
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="products" className="mt-0">
@@ -651,6 +656,10 @@ const FarmerDashboard = () => {
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="market-prices" className="mt-0">
+            <MarketPrices />
           </TabsContent>
         </Tabs>
       </main>
