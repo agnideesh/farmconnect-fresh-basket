@@ -5,7 +5,7 @@ import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon, Users } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -22,6 +22,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Product } from '@/components/Products/ProductCard';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import FarmerLocationMap from '@/components/Map/FarmerLocationMap';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface ExtendedProduct extends Product {
   description?: string;
@@ -48,6 +51,16 @@ interface LocationState {
   error: string | null;
 }
 
+interface Follower {
+  id: string;
+  user_id: string;
+  farmer_id: string;
+  created_at: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+}
+
 const FarmerDashboard = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
@@ -55,9 +68,12 @@ const FarmerDashboard = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<ExtendedProduct[]>([]);
+  const [followers, setFollowers] = useState<Follower[]>([]);
+  const [isFollowersLoading, setIsFollowersLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("products");
 
   const [productForm, setProductForm] = useState({
     id: '',
@@ -129,7 +145,55 @@ const FarmerDashboard = () => {
     };
 
     fetchProducts();
+    fetchFollowers();
   }, [user, profile, toast]);
+
+  const fetchFollowers = async () => {
+    if (!user) return;
+    
+    setIsFollowersLoading(true);
+    try {
+      // Join follows table with profiles to get follower information
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          id,
+          user_id,
+          farmer_id,
+          created_at,
+          profiles:user_id (
+            full_name,
+            avatar_url,
+            email
+          )
+        `)
+        .eq('farmer_id', user.id);
+
+      if (error) throw error;
+
+      // Transform the joined data into a flat structure
+      const formattedFollowers = data.map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        farmer_id: item.farmer_id,
+        created_at: item.created_at,
+        full_name: item.profiles?.full_name || null,
+        avatar_url: item.profiles?.avatar_url || null,
+        email: item.profiles?.email || null
+      }));
+
+      setFollowers(formattedFollowers);
+    } catch (error: any) {
+      console.error('Error fetching followers:', error.message);
+      toast({
+        title: 'Error',
+        description: 'Failed to load followers. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsFollowersLoading(false);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -427,77 +491,158 @@ const FarmerDashboard = () => {
       <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Farmer Dashboard</h1>
-          <Button onClick={handleAddProduct} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Add Product
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : products.length === 0 ? (
-          <div className="text-center py-20 bg-muted/30 rounded-lg">
-            <h2 className="text-xl font-semibold mb-2">No Products Yet</h2>
-            <p className="text-muted-foreground mb-4">Add your first product to start selling!</p>
-            <Button onClick={handleAddProduct} className="flex items-center gap-2">
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleAddProduct} 
+              className="flex items-center gap-2"
+              disabled={activeTab !== "products"}
+            >
               <Plus className="w-4 h-4" />
-              Add Your First Product
+              Add Product
             </Button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map(product => (
-              <div key={product.id} className="bg-card rounded-lg shadow-sm overflow-hidden border">
-                <div className="aspect-video relative">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="mb-6">
+            <TabsTrigger value="products" className="flex items-center gap-1">
+              Products
+            </TabsTrigger>
+            <TabsTrigger value="followers" className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              Followers
+              {followers.length > 0 && (
+                <span className="ml-1 bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs">
+                  {followers.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="products" className="mt-0">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-20 bg-muted/30 rounded-lg">
+                <h2 className="text-xl font-semibold mb-2">No Products Yet</h2>
+                <p className="text-muted-foreground mb-4">Add your first product to start selling!</p>
+                <Button onClick={handleAddProduct} className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Your First Product
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map(product => (
+                  <div key={product.id} className="bg-card rounded-lg shadow-sm overflow-hidden border">
+                    <div className="aspect-video relative">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg">{product.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {product.description?.substring(0, 100)}
+                        {product.description && product.description.length > 100 ? '...' : ''}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-muted-foreground text-sm">Price:</span>
+                          <span className="ml-1 font-medium">₹{product.price.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground text-sm">Quantity:</span>
+                          <span className="ml-1 font-medium">{product.quantity} kg</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between mt-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditProduct(product)}
+                          className="flex items-center gap-1"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="followers" className="mt-0">
+            {isFollowersLoading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : followers.length === 0 ? (
+              <div className="text-center py-20 bg-muted/30 rounded-lg">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h2 className="text-xl font-semibold mb-2">No Followers Yet</h2>
+                <p className="text-muted-foreground">
+                  Users who follow you will appear here. Share your profile to attract followers!
+                </p>
+              </div>
+            ) : (
+              <div className="bg-card rounded-lg border shadow-sm">
+                <div className="p-4 border-b">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Your Followers
+                    <span className="ml-2 bg-primary/10 text-primary rounded-full px-2 py-0.5 text-sm">
+                      {followers.length}
+                    </span>
+                  </h2>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {product.description?.substring(0, 100)}
-                    {product.description && product.description.length > 100 ? '...' : ''}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="text-muted-foreground text-sm">Price:</span>
-                      <span className="ml-1 font-medium">₹{product.price.toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground text-sm">Quantity:</span>
-                      <span className="ml-1 font-medium">{product.quantity} kg</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between mt-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditProduct(product)}
-                      className="flex items-center gap-1"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </Button>
-                  </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Follower</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Following Since</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {followers.map((follower) => (
+                        <TableRow key={follower.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={follower.avatar_url || undefined} alt={follower.full_name || 'User'} />
+                                <AvatarFallback>{follower.full_name?.charAt(0) || 'U'}</AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{follower.full_name || 'Anonymous User'}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{follower.email || 'No email provided'}</TableCell>
+                          <TableCell>{new Date(follower.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
