@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -153,34 +154,43 @@ const FarmerDashboard = () => {
     
     setIsFollowersLoading(true);
     try {
-      // Join follows table with profiles to get follower information
-      const { data, error } = await supabase
+      // First, get the list of followers IDs
+      const { data: followsData, error: followsError } = await supabase
         .from('follows')
-        .select(`
-          id,
-          user_id,
-          farmer_id,
-          created_at,
-          profiles:user_id (
-            full_name,
-            avatar_url,
-            email
-          )
-        `)
+        .select('id, user_id, farmer_id, created_at')
         .eq('farmer_id', user.id);
 
-      if (error) throw error;
+      if (followsError) throw followsError;
 
-      // Transform the joined data into a flat structure
-      const formattedFollowers = data.map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        farmer_id: item.farmer_id,
-        created_at: item.created_at,
-        full_name: item.profiles?.full_name || null,
-        avatar_url: item.profiles?.avatar_url || null,
-        email: item.profiles?.email || null
-      }));
+      // If no followers, return empty array
+      if (!followsData || followsData.length === 0) {
+        setFollowers([]);
+        setIsFollowersLoading(false);
+        return;
+      }
+
+      // Get follower profiles in a separate query
+      const followerIds = followsData.map(follow => follow.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, email')
+        .in('id', followerIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const formattedFollowers = followsData.map(follow => {
+        const profile = profilesData?.find(p => p.id === follow.user_id);
+        return {
+          id: follow.id,
+          user_id: follow.user_id,
+          farmer_id: follow.farmer_id,
+          created_at: follow.created_at,
+          full_name: profile?.full_name || null,
+          avatar_url: profile?.avatar_url || null,
+          email: profile?.email || null
+        };
+      });
 
       setFollowers(formattedFollowers);
     } catch (error: any) {
