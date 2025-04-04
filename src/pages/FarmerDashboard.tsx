@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +5,7 @@ import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon, Users, ChartBarIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, MapPin, Image as ImageIcon, Users, DollarSign } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
