@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard, { Product } from './ProductCard';
-import { Search, MapPin, List, Grid as GridIcon } from 'lucide-react';
+import { MapPin, List, Grid as GridIcon } from 'lucide-react';
 import FadeInSection from '../UI/FadeInSection';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +20,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
 
 interface ProductGridProps {
   selectedCategory: string;
@@ -32,7 +31,6 @@ interface Location {
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLocationEnabled, setIsLocationEnabled] = useState(false);
@@ -188,11 +186,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   const filteredProducts = React.useMemo(() => {
     let filtered = (products || []).filter(product => {
       const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
-      
-      const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      return categoryMatch && searchMatch;
+      return categoryMatch;
     });
 
     if (isLocationEnabled && userLocation) {
@@ -200,7 +194,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     }
 
     return filtered;
-  }, [products, selectedCategory, searchQuery, isLocationEnabled, userLocation]);
+  }, [products, selectedCategory, isLocationEnabled, userLocation]);
 
   if (isLoading) {
     return (
@@ -232,11 +226,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
 
   const displayProducts = products && products.length > 0 ? filteredProducts : sampleProducts.filter(product => {
     const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
-    
-    const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return categoryMatch && searchMatch;
+    return categoryMatch;
   });
 
   const LocationToggle = () => (
@@ -285,19 +275,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
             <List className="w-4 h-4" />
           </button>
         </div>
-        
-        <div className="relative w-full sm:w-auto">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 pointer-events-none">
-            <Search className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <Input
-            type="text"
-            placeholder="Search products or farmers..."
-            className="w-full sm:w-64 pl-10 pr-4 py-2"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
       </div>
     </div>
   );
@@ -312,27 +289,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
           
           <Sheet>
             <SheetTrigger className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-lg">
-              <Search className="w-4 h-4" />
               <span className="text-sm">Filters</span>
             </SheetTrigger>
             <SheetContent side="bottom" className="sm:max-w-md mx-auto rounded-t-xl">
               <SheetHeader>
-                <SheetTitle>Search & Filters</SheetTitle>
+                <SheetTitle>Filters</SheetTitle>
               </SheetHeader>
               <div className="py-4 space-y-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 pointer-events-none">
-                    <Search className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Search products or farmers..."
-                    className="w-full pl-10 pr-4 py-2"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">View Mode</span>
                   <div className="flex rounded-lg overflow-hidden border border-border">
