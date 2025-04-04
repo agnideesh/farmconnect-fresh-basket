@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ProductCard, { Product } from './ProductCard';
 import { Search, MapPin, List, Grid as GridIcon } from 'lucide-react';
@@ -40,7 +39,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const isMobile = useIsMobile();
   
-  // Get user's location with more detailed error handling
   useEffect(() => {
     if (navigator.geolocation && isLocationEnabled) {
       setLocationError(null);
@@ -95,7 +93,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     }
   }, [isLocationEnabled]);
 
-  // Calculate distance between two points using Haversine formula
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Radius of the earth in km
     const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -109,7 +106,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     return Math.round(d * 10) / 10; // Round to 1 decimal place
   };
   
-  // Fetch products from Supabase
   const { data: products, isLoading, error } = useQuery({
     queryKey: ['products', userLocation],
     queryFn: async () => {
@@ -120,11 +116,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       if (error) throw error;
       
       return data.map(item => {
-        // Calculate distance if user location is available and product has coordinates
         let distance: number | undefined;
         
         if (userLocation) {
-          // First try to use product's own coordinates if available
           if (item.latitude && item.longitude) {
             distance = calculateDistance(
               userLocation.latitude, 
@@ -133,10 +127,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
               item.longitude
             );
           } 
-          // Fallback to farmer's profile location if it exists
           else if (item.farmer_id) {
-            // In a real app, you should first check if this is cached or stored
-            // to avoid querying for each farmer's coordinates multiple times
             const getFarmerCoordinates = async (farmerId: string) => {
               const { data } = await supabase
                 .from('profiles')
@@ -147,8 +138,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
               return data;
             };
             
-            // Just generate some coordinates for now, but in a real scenario,
-            // you'd fetch these from the database using the getFarmerCoordinates function
             const farmerLat = 12.9716 + (Math.random() * 0.05 - 0.025);
             const farmerLng = 77.5946 + (Math.random() * 0.05 - 0.025);
             
@@ -159,7 +148,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
               farmerLng
             );
           } else {
-            // If no coordinates available, use a placeholder
             distance = Math.floor(Math.random() * 50) + 1;
           }
         }
@@ -187,30 +175,26 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
             longitude: item.longitude
           } : undefined,
           image: item.image_url || 'https://images.unsplash.com/photo-1592924357228-91a4daadcfad?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-          organic: Math.random() > 0.5, // Placeholder, you can add this field to your DB
-          native: Math.random() > 0.5,  // Placeholder, you can add this field to your DB
+          organic: Math.random() > 0.5,
+          native: Math.random() > 0.5,
           distance: distance
         };
       });
     },
     enabled: true,
-    refetchInterval: isLocationEnabled ? 30000 : false, // Refetch every 30 seconds if location is enabled
+    refetchInterval: isLocationEnabled ? 30000 : false,
   });
-  
-  // Filter products based on category, search query, and sort by distance if location is enabled
+
   const filteredProducts = React.useMemo(() => {
     let filtered = (products || []).filter(product => {
-      // Filter by category
       const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
       
-      // Filter by search query
       const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
       
       return categoryMatch && searchMatch;
     });
 
-    // Sort by distance if location is enabled
     if (isLocationEnabled && userLocation) {
       filtered = filtered.sort((a, b) => (a.distance || 999) - (b.distance || 999));
     }
@@ -218,7 +202,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     return filtered;
   }, [products, selectedCategory, searchQuery, isLocationEnabled, userLocation]);
 
-  // Show loading state
   if (isLoading) {
     return (
       <section className="py-8">
@@ -234,7 +217,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     );
   }
 
-  // Show error state
   if (error) {
     return (
       <section className="py-8">
@@ -248,13 +230,9 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     );
   }
 
-  // Use sample data if no products are loaded yet
-  // This is a fallback in case there's no data in the database yet
   const displayProducts = products && products.length > 0 ? filteredProducts : sampleProducts.filter(product => {
-    // Filter by category
     const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
     
-    // Filter by search query
     const searchMatch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         product.farmer.name.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -291,10 +269,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
       </h2>
       
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-        {/* Location toggle */}
         <LocationToggle />
         
-        {/* View mode toggle */}
         <div className="flex rounded-lg overflow-hidden border border-border">
           <button 
             onClick={() => setViewMode('grid')}
@@ -310,7 +286,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
           </button>
         </div>
         
-        {/* Search - Fixed by using Input component */}
         <div className="relative w-full sm:w-auto">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 pointer-events-none">
             <Search className="w-4 h-4 text-muted-foreground" />
@@ -327,7 +302,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     </div>
   );
 
-  // Mobile filters in drawer/sheet
   const MobileFilters = () => (
     <>
       {isMobile ? (
@@ -346,7 +320,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
                 <SheetTitle>Search & Filters</SheetTitle>
               </SheetHeader>
               <div className="py-4 space-y-4">
-                {/* Fixed search input in mobile view */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 z-10 pointer-events-none">
                     <Search className="w-4 h-4 text-muted-foreground" />
@@ -425,7 +398,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   );
 };
 
-// Sample product data (this is used as a fallback if no products in DB)
 const sampleProducts: Product[] = [
   {
     id: '1',
