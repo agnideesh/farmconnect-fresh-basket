@@ -45,7 +45,7 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center px-4 pt-16">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-primary">Agree2Table</h2>
+            <h2 className="text-4xl font-bold tracking-tight text-primary">Farm2Table</h2>
             <p className="mt-2 text-muted-foreground">Sign in to your account</p>
           </div>
 

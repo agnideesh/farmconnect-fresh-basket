@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Facebook, Instagram, Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -11,9 +12,9 @@ const Footer: React.FC = () => {
             <Link to="/" className="flex items-center gap-2">
               <div className="relative w-10 h-10">
                 <div className="absolute inset-0 bg-primary rounded-full opacity-20"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-primary font-semibold text-xl">A2T</div>
+                <div className="absolute inset-0 flex items-center justify-center text-primary font-semibold text-xl">F2T</div>
               </div>
-              <span className="text-2xl font-semibold">Agree2Table</span>
+              <span className="text-2xl font-semibold">Farm2Table</span>
             </Link>
             <p className="text-muted-foreground">
               Connecting farmers and consumers directly for fresher, healthier food and stronger communities.
@@ -90,7 +91,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Agree2Table. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Farm2Table. All rights reserved.</p>
         </div>
       </div>
     </footer>
