@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, ShoppingCart, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
+import { Info, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import {
@@ -121,27 +121,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             </div>
             
             <div className="flex items-center gap-2 mt-2">
-              <button 
-                className="flex-1 flex items-center justify-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-2 py-1 rounded-lg transition-colors text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Add to cart functionality would go here
-                }}
-              >
-                <ShoppingCart className="w-3 h-3" />
-                <span>Add</span>
-              </button>
-              
-              <button 
-                className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Add to favorites functionality would go here
-                }}
-              >
-                <Heart className="w-3 h-3" />
-              </button>
-              
               {product.farmer.phone && (
                 <button 
                   className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-100"
@@ -282,10 +261,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               isHovered ? "opacity-100 transform translate-x-0" : "opacity-0 transform translate-x-10"
             )}
           >
-            <button className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors">
-              <Heart className="w-4 h-4 text-foreground" />
-            </button>
-            
             {product.farmer.phone && (
               <button 
                 className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
@@ -344,12 +319,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               </div>
             </div>
             
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-end">
               <div className="text-lg font-semibold">₹{product.price.toFixed(2)}<span className="text-xs text-muted-foreground">/kg</span></div>
-              <button className="flex items-center gap-1 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg transition-colors">
-                <ShoppingCart className="w-4 h-4" />
-                <span className="text-sm">Add</span>
-              </button>
             </div>
           </div>
         </div>

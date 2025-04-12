@@ -12,7 +12,7 @@ import FadeInSection from '@/components/UI/FadeInSection';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ShoppingBag, Heart, Settings, Users, Tractor, Loader2 } from 'lucide-react';
+import { Users, Tractor, Loader2 } from 'lucide-react';
 
 const UserDashboard = () => {
   const { user, profile } = useAuth();
@@ -113,29 +113,7 @@ const UserDashboard = () => {
             <p className="text-muted-foreground">Manage your account and explore fresh farm products</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white shadow-sm rounded-xl p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold">My Orders</h3>
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <ShoppingBag className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-muted-foreground text-sm">Total orders placed</p>
-            </div>
-            
-            <div className="bg-white shadow-sm rounded-xl p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold">Saved Items</h3>
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <Heart className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-muted-foreground text-sm">Products in your wishlist</p>
-            </div>
-            
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
             <div className="bg-white shadow-sm rounded-xl p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold">Following</h3>
@@ -155,7 +133,7 @@ const UserDashboard = () => {
                 Following
               </TabsTrigger>
               <TabsTrigger value="recommended" className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4" />
+                <Tractor className="w-4 h-4" />
                 Recommended Products
               </TabsTrigger>
             </TabsList>
@@ -224,7 +202,7 @@ const UserDashboard = () => {
                 </div>
               ) : (
                 <div className="bg-secondary/50 rounded-xl p-12 text-center">
-                  <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <Tractor className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground mb-4">
                     {followedFarmers && followedFarmers.length > 0 
                       ? "Farmers you follow haven't posted any products yet" 
