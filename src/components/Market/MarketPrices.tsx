@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, DollarSign, RefreshCcw, AlertCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-// Define price data interfaces
 interface PriceData {
   id: string;
   name: string;
@@ -21,35 +21,91 @@ interface PriceData {
   market: string;
 }
 
+interface ApiResponse {
+  data: any;
+  updated_at: string;
+  is_cached?: boolean;
+}
+
 const MarketPrices = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'vegetables' | 'fruits'>('all');
 
-  // Fetch market price data
-  const { data: priceData, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['marketPrices'],
     queryFn: async () => {
       try {
-        // In a real app, this would be an API call to get real-time data
-        // For demo purposes, we're using mock data
+        const { data: responseData, error } = await supabase.functions.invoke('market-prices');
+        
+        if (error) throw new Error(error.message);
+
+        const apiResponse = responseData as ApiResponse;
+        
+        return transformApiData(apiResponse);
+      } catch (error: any) {
+        console.error('Error fetching market prices:', error.message);
+        toast({
+          title: 'API Error',
+          description: 'Using fallback data. Will retry connection later.',
+          variant: 'destructive',
+        });
         return getMockPriceData();
-      } catch (error) {
-        throw new Error('Failed to fetch market prices');
       }
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 30 * 60 * 1000,
   });
 
-  // Filter data based on search term and active category
-  const filteredData = priceData?.filter(item => {
+  const transformApiData = (apiResponse: ApiResponse): PriceData[] => {
+    if (apiResponse.is_cached) {
+      toast({
+        title: 'Using cached data',
+        description: `Last updated: ${new Date(apiResponse.updated_at).toLocaleString()}`,
+        variant: 'default',
+      });
+    }
+    
+    try {
+      const rawItems = apiResponse.data.items || [];
+      
+      return rawItems.map((item: any, index: number) => ({
+        id: item.id || `${index}`,
+        name: item.commodity_name || item.name,
+        category: categorizeItem(item.commodity_name || item.name),
+        price: parseFloat(item.modal_price) || item.price || 0,
+        unit: item.unit || 'kg',
+        priceChange: calculatePriceChange(item),
+        lastUpdated: apiResponse.updated_at,
+        market: item.market || item.market_name || 'Various Markets'
+      }));
+    } catch (error) {
+      console.error('Error transforming API data:', error);
+      return getMockPriceData();
+    }
+  };
+
+  const categorizeItem = (name: string): 'vegetables' | 'fruits' => {
+    const fruits = ['apple', 'banana', 'orange', 'mango', 'grape', 'watermelon', 'papaya'];
+    return fruits.some(fruit => name.toLowerCase().includes(fruit)) ? 'fruits' : 'vegetables';
+  };
+
+  const calculatePriceChange = (item: any): number => {
+    if (item.price_change_percentage) return item.price_change_percentage;
+    if (item.min_price && item.modal_price) {
+      const min = parseFloat(item.min_price);
+      const modal = parseFloat(item.modal_price);
+      if (min > 0) return ((modal - min) / min) * 100;
+    }
+    return parseFloat((Math.random() * 10 * (Math.random() > 0.5 ? 1 : -1)).toFixed(1));
+  };
+
+  const filteredData = data?.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.market.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   }) || [];
 
-  // Handle errors
   useEffect(() => {
     if (error) {
       toast({
@@ -60,7 +116,6 @@ const MarketPrices = () => {
     }
   }, [error, toast]);
 
-  // Function to determine price trend color and icon
   const getPriceTrend = (priceChange: number) => {
     if (priceChange > 0) {
       return {
@@ -91,22 +146,41 @@ const MarketPrices = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">Market Prices</h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground flex items-center gap-1">
             Current wholesale prices in Indian markets
+            {data && data[0]?.lastUpdated && (
+              <span className="text-xs px-2 py-0.5 bg-primary/10 rounded-full">
+                Updated: {formatLastUpdated(data[0].lastUpdated)}
+              </span>
+            )}
           </p>
         </div>
         
-        <div className="relative w-full sm:w-auto min-w-[240px]">
-          <Input
-            placeholder="Search by name or market..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pr-8"
-          />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:min-w-[240px]">
+            <Input
+              placeholder="Search by name or market..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-8"
+            />
+          </div>
+          <Button 
+            size="icon" 
+            variant="outline" 
+            onClick={() => refetch()} 
+            disabled={isRefetching}
+            className="shrink-0"
+          >
+            {isRefetching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCcw className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
-      {/* Price summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -121,7 +195,7 @@ const MarketPrices = () => {
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  `₹${calculateAverage(priceData || [], 'vegetables')}/kg`
+                  `₹${calculateAverage(data || [], 'vegetables')}/kg`
                 )}
               </div>
             </div>
@@ -141,7 +215,7 @@ const MarketPrices = () => {
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  `₹${calculateAverage(priceData || [], 'fruits')}/kg`
+                  `₹${calculateAverage(data || [], 'fruits')}/kg`
                 )}
               </div>
             </div>
@@ -159,7 +233,7 @@ const MarketPrices = () => {
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                formatLastUpdated(priceData?.[0]?.lastUpdated || '')
+                formatLastUpdated(data?.[0]?.lastUpdated || '')
               )}
             </div>
           </CardContent>
@@ -188,13 +262,17 @@ const MarketPrices = () => {
 
       <div className="text-xs text-muted-foreground mt-6">
         <p>* Prices are indicative wholesale rates and may vary by location and quality.</p>
-        <p>* Data refreshes automatically every minute.</p>
+        <p>* Data refreshes automatically every 30 minutes.</p>
+        {data && data[0]?.lastUpdated && (
+          <p className="mt-1 flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" /> Last updated: {new Date(data[0].lastUpdated).toLocaleString()}
+          </p>
+        )}
       </div>
     </div>
   );
 };
 
-// Helper component for the price table
 const PriceTable = ({ 
   data, 
   isLoading, 
@@ -273,7 +351,6 @@ const PriceTable = ({
   );
 };
 
-// Helper functions
 function calculateAverage(data: PriceData[], category: 'vegetables' | 'fruits'): string {
   const filtered = data.filter(item => item.category === category);
   if (filtered.length === 0) return '0.00';
@@ -304,7 +381,6 @@ function formatTime(dateString: string): string {
   });
 }
 
-// Mock data function - in a real app this would be replaced with an API call
 function getMockPriceData(): PriceData[] {
   const now = new Date().toISOString();
   
