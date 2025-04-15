@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Info, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FarmerLocationMap from '../Map/FarmerLocationMap';
+import StarRating from './StarRating';
 
 export interface Product {
   id: string;
@@ -93,6 +93,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
             <div>
               <span className="text-xs text-muted-foreground capitalize">{product.category}</span>
               <h3 className="font-medium">{product.name}</h3>
+              
+              <StarRating
+                productId={product.id}
+                size="sm"
+                averageRating={4.5} // We'll fetch this from the database later
+                totalRatings={10}   // We'll fetch this from the database later
+              />
               
               <div className="flex items-center text-sm mt-1">
                 <span className="font-medium">₹{product.price.toFixed(2)}</span>
@@ -291,6 +298,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
           <div className="mb-2">
             <span className="text-xs text-muted-foreground capitalize">{product.category}</span>
             <h3 className="font-medium">{product.name}</h3>
+            
+            <StarRating
+              productId={product.id}
+              size="sm"
+              averageRating={4.5} // We'll fetch this from the database later
+              totalRatings={10}   // We'll fetch this from the database later
+            />
             
             {product.quantity !== undefined && (
               <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
