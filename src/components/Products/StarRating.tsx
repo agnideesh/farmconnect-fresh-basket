@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface StarRatingProps {
   productId: string;
@@ -27,6 +28,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   const [rating, setRating] = React.useState(initialRating);
   const [hoveredRating, setHoveredRating] = React.useState(0);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -38,13 +40,21 @@ const StarRating: React.FC<StarRatingProps> = ({
     if (readonly) return;
 
     try {
-      const { error } = await supabase
-        .from('product_ratings')
-        .upsert({
-          product_id: productId,
-          rating: selectedRating,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to rate products",
+          variant: "destructive",
         });
+        return;
+      }
+
+      // Use raw SQL query with RPC to avoid type issues
+      const { error } = await supabase.rpc('set_product_rating', {
+        p_product_id: productId,
+        p_user_id: user.id,
+        p_rating: selectedRating
+      });
 
       if (error) throw error;
 
@@ -59,7 +69,7 @@ const StarRating: React.FC<StarRatingProps> = ({
       console.error('Error updating rating:', error);
       toast({
         title: "Error",
-        description: "Please sign in to rate products",
+        description: "Unable to update rating. Please try again.",
         variant: "destructive",
       });
     }
