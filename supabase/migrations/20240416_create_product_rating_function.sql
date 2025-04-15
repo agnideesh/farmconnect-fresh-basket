@@ -2,8 +2,8 @@
 -- Function to set a product rating (create or update)
 CREATE OR REPLACE FUNCTION public.set_product_rating(
   p_product_id UUID,
-  p_user_id UUID,
-  p_rating INTEGER
+  p_rating INTEGER,
+  p_user_id UUID
 )
 RETURNS VOID
 LANGUAGE plpgsql

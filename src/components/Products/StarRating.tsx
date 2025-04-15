@@ -49,11 +49,11 @@ const StarRating: React.FC<StarRatingProps> = ({
         return;
       }
 
-      // Fix the TypeScript error by correctly typing the parameters
+      // Fix the parameter order to match the SQL function definition
       const { error } = await supabase.rpc('set_product_rating', {
         p_product_id: productId,
-        p_user_id: user.id,
-        p_rating: selectedRating
+        p_rating: selectedRating,
+        p_user_id: user.id
       });
 
       if (error) throw error;
