@@ -4,16 +4,22 @@ import Navbar from '@/components/Layout/Navbar';
 import Hero from '@/components/Hero/Hero';
 import CategoryFilter from '@/components/Products/CategoryFilter';
 import ProductGrid from '@/components/Products/ProductGrid';
+import ProductSearch from '@/components/Products/ProductSearch';
 import Footer from '@/components/Layout/Footer';
 import FadeInSection from '@/components/UI/FadeInSection';
 import { ArrowDown } from 'lucide-react';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   const productsRef = useRef<HTMLDivElement>(null);
 
   const scrollToProducts = () => {
     productsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
   };
 
   return (
@@ -34,12 +40,18 @@ const Index = () => {
         </FadeInSection>
         
         <div id="products" ref={productsRef}>
-          <CategoryFilter
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          <div className="container mx-auto px-6 space-y-8">
+            <ProductSearch onSearch={handleSearch} />
+            <CategoryFilter
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
+          </div>
           
-          <ProductGrid selectedCategory={selectedCategory} />
+          <ProductGrid 
+            selectedCategory={selectedCategory}
+            searchTerm={searchTerm}
+          />
         </div>
 
         <FadeInSection className="py-16 bg-primary/5">

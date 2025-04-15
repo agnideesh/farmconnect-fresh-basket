@@ -23,6 +23,7 @@ import { toast } from "@/components/ui/use-toast";
 
 interface ProductGridProps {
   selectedCategory: string;
+  searchTerm?: string;
 }
 
 interface Location {
@@ -30,7 +31,7 @@ interface Location {
   longitude: number;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
+const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory, searchTerm = '' }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [isLocationEnabled, setIsLocationEnabled] = useState(false);
@@ -186,7 +187,12 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
   const filteredProducts = React.useMemo(() => {
     let filtered = (products || []).filter(product => {
       const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
-      return categoryMatch;
+      const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.farmer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.farmer.location.toLowerCase().includes(searchTerm.toLowerCase());
+      return categoryMatch && searchMatch;
     });
 
     if (isLocationEnabled && userLocation) {
@@ -194,7 +200,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory }) => {
     }
 
     return filtered;
-  }, [products, selectedCategory, isLocationEnabled, userLocation]);
+  }, [products, selectedCategory, searchTerm, isLocationEnabled, userLocation]);
 
   if (isLoading) {
     return (
