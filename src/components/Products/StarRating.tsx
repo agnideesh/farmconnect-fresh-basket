@@ -49,7 +49,7 @@ const StarRating: React.FC<StarRatingProps> = ({
         return;
       }
 
-      // Use raw SQL query with RPC to avoid type issues
+      // Fix the TypeScript error by correctly typing the parameters
       const { error } = await supabase.rpc('set_product_rating', {
         p_product_id: productId,
         p_user_id: user.id,
