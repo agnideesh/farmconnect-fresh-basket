@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Info, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ export interface Product {
   name: string;
   category: string;
   price: number;
+  description?: string;
   quantity?: number;
   farmer: {
     id: string;

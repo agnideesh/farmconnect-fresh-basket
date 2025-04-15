@@ -154,6 +154,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory, searchTerm 
         return {
           id: item.id,
           name: item.name,
+          description: item.description || '',
           category: item.category,
           price: item.price,
           quantity: item.quantity,
@@ -188,7 +189,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ selectedCategory, searchTerm 
     let filtered = (products || []).filter(product => {
       const categoryMatch = selectedCategory === 'all' || product.category === selectedCategory;
       const searchMatch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
                          product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.farmer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.farmer.location.toLowerCase().includes(searchTerm.toLowerCase());
