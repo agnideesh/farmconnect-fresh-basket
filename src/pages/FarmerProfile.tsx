@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -24,7 +23,6 @@ const FarmerProfile = () => {
   const { toast } = useToast();
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   
-  // Fetch farmer profile
   const { data: farmer, isLoading: isLoadingFarmer } = useQuery({
     queryKey: ['farmer', farmerId],
     queryFn: async () => {
@@ -41,7 +39,6 @@ const FarmerProfile = () => {
     enabled: !!farmerId,
   });
   
-  // Check if user follows this farmer
   const { data: isFollowing, refetch: refetchFollowStatus } = useQuery({
     queryKey: ['isFollowing', user?.id, farmerId],
     queryFn: async () => {
@@ -60,7 +57,6 @@ const FarmerProfile = () => {
     enabled: !!user && !!farmerId,
   });
   
-  // Fetch farmer products
   const { data: products, isLoading: isLoadingProducts } = useQuery({
     queryKey: ['farmerProducts', farmerId],
     queryFn: async () => {
@@ -71,7 +67,6 @@ const FarmerProfile = () => {
       
       if (error) throw new Error(error.message);
       
-      // Transform to Product type expected by ProductCard
       return data.map(product => ({
         id: product.id,
         name: product.name,
@@ -109,7 +104,6 @@ const FarmerProfile = () => {
     
     try {
       if (isFollowing) {
-        // Unfollow the farmer
         const { error } = await supabase
           .from('follows')
           .delete()
@@ -123,7 +117,6 @@ const FarmerProfile = () => {
           description: `You are no longer following ${farmer?.full_name}`,
         });
       } else {
-        // Follow the farmer
         const { error } = await supabase
           .from('follows')
           .insert({
@@ -139,7 +132,6 @@ const FarmerProfile = () => {
         });
       }
       
-      // Refetch the follow status
       refetchFollowStatus();
     } catch (error: any) {
       toast({
