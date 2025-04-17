@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import AnimatedButton from '@/components/UI/AnimatedButton';
-import { LogIn } from 'lucide-react';
+import { LogIn, UserCheck, UserRoundCheck } from 'lucide-react';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 
@@ -12,7 +12,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -23,14 +23,25 @@ const Auth = () => {
     try {
       await signIn(email, password);
       navigate('/');
-      toast({
-        title: "Success",
-        description: "Welcome back!",
-      });
+      
+      // Enhanced toast notification based on user type
+      if (profile?.user_type === 'farmer') {
+        toast({
+          title: "Welcome back, Farmer!",
+          description: "You've successfully signed in to your farmer account.",
+          icon: <UserCheck className="h-5 w-5 text-green-500" />,
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in to your account.",
+          icon: <UserRoundCheck className="h-5 w-5 text-primary" />,
+        });
+      }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to sign in",
+        title: "Sign in failed",
+        description: error.message || "Please check your credentials and try again",
         variant: "destructive",
       });
     } finally {
