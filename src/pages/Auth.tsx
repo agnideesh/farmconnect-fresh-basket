@@ -29,13 +29,11 @@ const Auth = () => {
         toast({
           title: "Welcome back, Farmer!",
           description: "You've successfully signed in to your farmer account.",
-          icon: <UserCheck className="h-5 w-5 text-green-500" />,
         });
       } else {
         toast({
           title: "Welcome back!",
           description: "You've successfully signed in to your account.",
-          icon: <UserRoundCheck className="h-5 w-5 text-primary" />,
         });
       }
     } catch (error: any) {
