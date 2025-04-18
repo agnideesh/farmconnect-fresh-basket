@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Info, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import FarmerLocationMap from '../Map/FarmerLocationMap';
+import { ProductRating } from './ProductRating';
 
 export interface Product {
   id: string;
