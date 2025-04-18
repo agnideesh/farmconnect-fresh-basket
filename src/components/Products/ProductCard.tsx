@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Info, Heart, Phone, Mail, MapPin, Navigation, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -396,6 +397,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, view = 'grid' }) => 
               )}
               {product.organic && <span className="inline-block mr-2 mt-2 bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full">Organic</span>}
               {product.native && <span className="inline-block mt-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full">Native</span>}
+            </div>
+            
+            {/* Add the ProductRating component here */}
+            <div className="border-t pt-4">
+              <ProductRating productId={product.id} />
             </div>
           </div>
         </DialogContent>
