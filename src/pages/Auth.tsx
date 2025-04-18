@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import AnimatedButton from '@/components/UI/AnimatedButton';
-import { LogIn, UserCheck, UserRoundCheck } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import Navbar from '@/components/Layout/Navbar';
 import Footer from '@/components/Layout/Footer';
 
@@ -27,13 +27,15 @@ const Auth = () => {
       // Enhanced toast notification based on user type
       if (profile?.user_type === 'farmer') {
         toast({
-          title: "Welcome back, Farmer!",
-          description: "You've successfully signed in to your farmer account.",
+          title: "Welcome Farmer!",
+          description: "Great to see you back at Farm2Table. Ready to manage your produce?",
+          variant: "default",
         });
       } else {
         toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in to your account.",
+          title: "Welcome Back!",
+          description: "Explore fresh, local produce from our farmers.",
+          variant: "default",
         });
       }
     } catch (error: any) {
