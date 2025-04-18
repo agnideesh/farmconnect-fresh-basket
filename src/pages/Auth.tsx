@@ -28,13 +28,13 @@ const Auth = () => {
       if (profile?.user_type === 'farmer') {
         toast({
           title: "Welcome Farmer!",
-          description: "Great to see you back at Farm2Table. Ready to manage your produce?",
+          description: "Ready to manage your farm and connect with customers?",
           variant: "default",
         });
       } else {
         toast({
-          title: "Welcome Back!",
-          description: "Explore fresh, local produce from our farmers.",
+          title: "Welcome User!",
+          description: "Discover fresh, local produce from our farmers.",
           variant: "default",
         });
       }
