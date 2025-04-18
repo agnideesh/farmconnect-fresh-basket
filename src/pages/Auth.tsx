@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,7 +23,6 @@ const Auth = () => {
       await signIn(email, password);
       navigate('/');
       
-      // Enhanced toast notification based on user type
       if (profile?.user_type === 'farmer') {
         toast({
           title: "Welcome Farmer!",
