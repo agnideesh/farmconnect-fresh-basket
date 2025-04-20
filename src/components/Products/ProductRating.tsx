@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -63,8 +63,15 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data;
-    }
+    },
   });
+
+  // Set the user's rating when it loads
+  useEffect(() => {
+    if (userRating?.rating) {
+      setRating(userRating.rating);
+    }
+  }, [userRating]);
 
   const handleRating = async (value: number) => {
     if (!user) {
@@ -162,7 +169,7 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
               <Star
                 key={star}
                 className={`w-6 h-6 cursor-pointer transition-colors ${
-                  (hoveredStar || userRating?.rating || 0) >= star
+                  (hoveredStar || rating || 0) >= star
                     ? 'fill-yellow-400 text-yellow-400'
                     : 'text-gray-300'
                 }`}
@@ -198,23 +205,24 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
           </Button>
         </div>
 
-        <div className="space-y-4 mt-4">
-          {comments?.map((comment) => (
-            <div key={comment.id} className="border-b pb-4">
-              <div className="flex items-start gap-2">
-                <div className="flex-1">
-                  <p className="text-sm font-medium">
-                    {(comment.profiles as any)?.full_name || 'Anonymous'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(comment.created_at).toLocaleDateString()}
-                  </p>
-                  <p className="mt-2">{comment.comment}</p>
+        <div className="space-y-4 mt-4 max-h-[300px] overflow-y-auto">
+          {comments && comments.length > 0 ? (
+            comments.map((comment) => (
+              <div key={comment.id} className="border-b pb-4">
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">
+                      {(comment.profiles as any)?.full_name || 'Anonymous'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(comment.created_at).toLocaleDateString()}
+                    </p>
+                    <p className="mt-2">{comment.comment}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          {!comments?.length && (
+            ))
+          ) : (
             <p className="text-sm text-muted-foreground">No comments yet</p>
           )}
         </div>
