@@ -13,6 +13,21 @@ interface ProductRatingProps {
   productId: string;
 }
 
+// Define interfaces for our data structures
+interface UserProfile {
+  full_name: string;
+  avatar_url?: string;
+}
+
+interface Comment {
+  id: string;
+  product_id: string;
+  user_id: string;
+  comment: string;
+  created_at: string;
+  profiles?: UserProfile; // Make profiles optional since we add it manually
+}
+
 export const ProductRating = ({ productId }: ProductRatingProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -72,18 +87,18 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
               .from('profiles')
               .select('full_name, avatar_url')
               .eq('id', comment.user_id)
-              .single();
+              .maybeSingle(); // Using maybeSingle instead of single to prevent errors
               
             return {
               ...comment,
               profiles: profileData || { full_name: 'Anonymous' }
-            };
+            } as Comment;
           })
         );
         return commentsWithProfiles;
       }
       
-      return data || [];
+      return (data || []) as Comment[];
     },
     staleTime: 0, // Always treat data as stale to ensure we get fresh data
     refetchOnMount: true, // Ensure we refetch when component mounts
@@ -240,7 +255,7 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
                       <p className="text-sm font-medium">
-                        {(comment.profiles as any)?.full_name || 'Anonymous'}
+                        {comment.profiles?.full_name || 'Anonymous'}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(comment.created_at).toLocaleDateString()}
