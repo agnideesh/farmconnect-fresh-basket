@@ -55,19 +55,35 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
   const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: ['productComments', productId],
     queryFn: async () => {
+      // Modified this query to not use join syntax, which was causing the error
       const { data, error } = await supabase
         .from('product_comments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('product_id', productId)
         .order('created_at', { ascending: false });
+      
       if (error) throw error;
-      return data;
+      
+      // For each comment, fetch the user profile separately
+      if (data && data.length > 0) {
+        const commentsWithProfiles = await Promise.all(
+          data.map(async (comment) => {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', comment.user_id)
+              .single();
+              
+            return {
+              ...comment,
+              profiles: profileData || { full_name: 'Anonymous' }
+            };
+          })
+        );
+        return commentsWithProfiles;
+      }
+      
+      return data || [];
     },
     staleTime: 0, // Always treat data as stale to ensure we get fresh data
     refetchOnMount: true, // Ensure we refetch when component mounts
@@ -151,26 +167,8 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
       // Clear the form
       setComment('');
       
-      // Immediately invalidate and refetch to ensure the UI updates
-      queryClient.invalidateQueries({ queryKey: ['productComments', productId] });
-      
-      // Fetch the updated comments directly to ensure we have the latest data
-      const { data: updatedComments, error: fetchError } = await supabase
-        .from('product_comments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('product_id', productId)
-        .order('created_at', { ascending: false });
-        
-      if (fetchError) throw fetchError;
-      
-      // Manually update the cache with the new data
-      queryClient.setQueryData(['productComments', productId], updatedComments);
+      // Immediately refetch to ensure the UI updates
+      refetchComments();
       
       toast({
         title: "Comment added",
