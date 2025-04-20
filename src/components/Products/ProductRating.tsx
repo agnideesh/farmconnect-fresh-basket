@@ -22,6 +22,7 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
   const [hoveredStar, setHoveredStar] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Query for product rating
   const { data: ratingData, refetch: refetchRating } = useQuery({
     queryKey: ['productRating', productId],
     queryFn: async () => {
@@ -33,6 +34,7 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
     }
   });
 
+  // Query for user rating
   const { data: userRating, refetch: refetchUserRating } = useQuery({
     queryKey: ['userRating', productId, user?.id],
     queryFn: async () => {
@@ -49,6 +51,7 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
     enabled: !!user,
   });
 
+  // Query for comments with staleTime set to 0 to ensure fresh data
   const { data: comments, refetch: refetchComments } = useQuery({
     queryKey: ['productComments', productId],
     queryFn: async () => {
@@ -66,6 +69,8 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
       if (error) throw error;
       return data;
     },
+    staleTime: 0, // Always treat data as stale to ensure we get fresh data
+    refetchOnMount: true, // Ensure we refetch when component mounts
   });
 
   // Set the user's rating when it loads
@@ -143,18 +148,36 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
 
       if (error) throw error;
 
-      // Clear the form and refresh comments
+      // Clear the form
       setComment('');
       
-      // Invalidate the query cache for comments to force a refetch
-      await queryClient.invalidateQueries({ queryKey: ['productComments', productId] });
-      await refetchComments();
+      // Immediately invalidate and refetch to ensure the UI updates
+      queryClient.invalidateQueries({ queryKey: ['productComments', productId] });
+      
+      // Fetch the updated comments directly to ensure we have the latest data
+      const { data: updatedComments, error: fetchError } = await supabase
+        .from('product_comments')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false });
+        
+      if (fetchError) throw fetchError;
+      
+      // Manually update the cache with the new data
+      queryClient.setQueryData(['productComments', productId], updatedComments);
       
       toast({
         title: "Comment added",
         description: "Your comment has been posted",
       });
     } catch (error: any) {
+      console.error("Comment error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to post comment",
@@ -207,7 +230,7 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
             disabled={isSubmitting || !comment.trim()}
             className="self-end"
           >
-            Post Comment
+            {isSubmitting ? 'Posting...' : 'Post Comment'}
           </Button>
         </div>
 
