@@ -6,7 +6,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ProductRatingProps {
   productId: string;
@@ -15,6 +16,7 @@ interface ProductRatingProps {
 export const ProductRating = ({ productId }: ProductRatingProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -141,8 +143,12 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
 
       if (error) throw error;
 
+      // Clear the form and refresh comments
       setComment('');
-      refetchComments();
+      
+      // Invalidate the query cache for comments to force a refetch
+      await queryClient.invalidateQueries({ queryKey: ['productComments', productId] });
+      await refetchComments();
       
       toast({
         title: "Comment added",
@@ -205,27 +211,29 @@ export const ProductRating = ({ productId }: ProductRatingProps) => {
           </Button>
         </div>
 
-        <div className="space-y-4 mt-4 max-h-[300px] overflow-y-auto">
-          {comments && comments.length > 0 ? (
-            comments.map((comment) => (
-              <div key={comment.id} className="border-b pb-4">
-                <div className="flex items-start gap-2">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">
-                      {(comment.profiles as any)?.full_name || 'Anonymous'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(comment.created_at).toLocaleDateString()}
-                    </p>
-                    <p className="mt-2">{comment.comment}</p>
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-4 mt-4 pr-4">
+            {comments && comments.length > 0 ? (
+              comments.map((comment) => (
+                <div key={comment.id} className="border-b pb-4">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {(comment.profiles as any)?.full_name || 'Anonymous'}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(comment.created_at).toLocaleDateString()}
+                      </p>
+                      <p className="mt-2">{comment.comment}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground">No comments yet</p>
-          )}
-        </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No comments yet</p>
+            )}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
