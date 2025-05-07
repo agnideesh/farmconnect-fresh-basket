@@ -30,6 +30,48 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_items: {
+        Row: {
+          category: string
+          commodity_name: string
+          created_at: string
+          id: string
+          market: string
+          max_price: number | null
+          min_price: number | null
+          modal_price: number
+          price_change_percentage: number | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          commodity_name: string
+          created_at?: string
+          id?: string
+          market: string
+          max_price?: number | null
+          min_price?: number | null
+          modal_price: number
+          price_change_percentage?: number | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          commodity_name?: string
+          created_at?: string
+          id?: string
+          market?: string
+          max_price?: number | null
+          min_price?: number | null
+          modal_price?: number
+          price_change_percentage?: number | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_comments: {
         Row: {
           comment: string

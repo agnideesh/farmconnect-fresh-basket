@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, TrendingUp, TrendingDown, DollarSign, RefreshCcw, AlertCircle } from 'lucide-react';
+import { Loader2, TrendingUp, TrendingDown, DollarSign, RefreshCcw, AlertCircle, Calendar, Database } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,9 +32,11 @@ const MarketPrices = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'vegetables' | 'fruits'>('all');
+  const [dataSource, setDataSource] = useState<'api' | 'database'>('api');
 
-  const { data, isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['marketPrices'],
+  // Query for API data
+  const { data: apiData, isLoading: isApiLoading, error: apiError, refetch: refetchApi, isRefetching: isApiRefetching } = useQuery({
+    queryKey: ['marketPrices', 'api'],
     queryFn: async () => {
       try {
         const { data: responseData, error } = await supabase.functions.invoke('market-prices');
@@ -44,7 +47,7 @@ const MarketPrices = () => {
         
         return transformApiData(apiResponse);
       } catch (error: any) {
-        console.error('Error fetching market prices:', error.message);
+        console.error('Error fetching market prices from API:', error.message);
         toast({
           title: 'API Error',
           description: 'Using fallback data. Will retry connection later.',
@@ -54,6 +57,51 @@ const MarketPrices = () => {
       }
     },
     refetchInterval: 30 * 60 * 1000,
+  });
+
+  // Query for direct database data
+  const { data: dbData, isLoading: isDbLoading, error: dbError, refetch: refetchDb, isRefetching: isDbRefetching } = useQuery({
+    queryKey: ['marketPrices', 'database'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('marketplace_items')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+          toast({
+            title: 'No data found',
+            description: 'No market prices found in the database.',
+            variant: 'destructive',
+          });
+          throw new Error('No data found in database');
+        }
+
+        return data.map(item => ({
+          id: item.id,
+          name: item.commodity_name,
+          category: item.category as 'vegetables' | 'fruits',
+          price: parseFloat(item.modal_price),
+          unit: item.unit || 'kg',
+          priceChange: item.price_change_percentage !== null ? parseFloat(item.price_change_percentage) : 0,
+          lastUpdated: item.updated_at,
+          market: item.market
+        }));
+      } catch (error: any) {
+        console.error('Error fetching market prices from database:', error.message);
+        toast({
+          title: 'Database Error',
+          description: 'Failed to load market prices from database.',
+          variant: 'destructive',
+        });
+        throw error;
+      }
+    },
+    enabled: dataSource === 'database',
+    refetchInterval: 60 * 60 * 1000, // Refresh hourly
   });
 
   const transformApiData = (apiResponse: ApiResponse): PriceData[] => {
@@ -98,6 +146,13 @@ const MarketPrices = () => {
     }
     return parseFloat((Math.random() * 10 * (Math.random() > 0.5 ? 1 : -1)).toFixed(1));
   };
+
+  // Get the data based on the current selected source
+  const data = dataSource === 'api' ? apiData : dbData;
+  const isLoading = dataSource === 'api' ? isApiLoading : isDbLoading;
+  const isRefetching = dataSource === 'api' ? isApiRefetching : isDbRefetching;
+  const error = dataSource === 'api' ? apiError : dbError;
+  const refetch = dataSource === 'api' ? refetchApi : refetchDb;
 
   const filteredData = data?.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -181,6 +236,19 @@ const MarketPrices = () => {
         </div>
       </div>
 
+      <Tabs value={dataSource} onValueChange={(value) => setDataSource(value as 'api' | 'database')} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="api" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Live API Data
+          </TabsTrigger>
+          <TabsTrigger value="database" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            Stored Database Data
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -225,7 +293,7 @@ const MarketPrices = () => {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Last Updated
+              {dataSource === 'api' ? 'Last Updated' : 'Data Source'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -233,7 +301,9 @@ const MarketPrices = () => {
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                formatLastUpdated(data?.[0]?.lastUpdated || '')
+                dataSource === 'api' 
+                  ? formatLastUpdated(data?.[0]?.lastUpdated || '') 
+                  : 'Supabase Database'
               )}
             </div>
           </CardContent>
@@ -262,7 +332,7 @@ const MarketPrices = () => {
 
       <div className="text-xs text-muted-foreground mt-6">
         <p>* Prices are indicative wholesale rates and may vary by location and quality.</p>
-        <p>* Data refreshes automatically every 30 minutes.</p>
+        <p>* API data refreshes automatically every 30 minutes, Database data hourly.</p>
         {data && data[0]?.lastUpdated && (
           <p className="mt-1 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" /> Last updated: {new Date(data[0].lastUpdated).toLocaleString()}
