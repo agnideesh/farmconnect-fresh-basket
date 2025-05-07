@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
 import AnimatedButton from '@/components/UI/AnimatedButton';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -19,11 +20,14 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 import { Menu, X, LogOut, Settings, LineChart } from 'lucide-react';
 
 const NavLinks = () => {
-  const { userType } = useAuth();
+  const { user } = useAuth();
+  
+  // Determine user type based on the user object
+  const userType = user?.user_metadata?.user_type || null;
   
   const links = [
     {
@@ -37,7 +41,7 @@ const NavLinks = () => {
     {
       label: "Market Prices",
       href: "/market-data",
-      icon: <LineChart className="h-4 w-4" />,  // Make sure to import LineChart from lucide-react
+      icon: <LineChart className="h-4 w-4" />,
     },
   ];
   
@@ -144,7 +148,7 @@ const Navbar = () => {
                       <Settings className="h-4 w-4 mr-2" />
                       Settings
                     </AnimatedButton>
-                    <AnimatedButton variant="destructive" className="w-full justify-start gap-2" onClick={() => signOut()}>
+                    <AnimatedButton variant="outline" className="w-full justify-start gap-2 text-red-500 hover:text-red-700" onClick={() => signOut()}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign Out
                     </AnimatedButton>
