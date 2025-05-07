@@ -17,7 +17,6 @@ import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Settings from "./pages/Settings";
 import ThemeInitializer from "./components/ThemeInitializer";
 import ChatButton from "./components/Chat/ChatButton";
-import MarketData from "./pages/MarketData";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +34,6 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/farmers" element={<FarmersList />} />
             <Route path="/farmers/:farmerId" element={<FarmerProfile />} />
-            <Route path="/market-data" element={<MarketData />} />
             <Route path="/user-dashboard" element={
               <ProtectedRoute userType="user">
                 <UserDashboard />

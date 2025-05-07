@@ -16,55 +16,10 @@ Deno.serve(async (req) => {
 
   try {
     // Generate market data directly instead of trying to fetch from external API
+    // This avoids any potential fetch errors
     const data = generateMarketData()
     
-    // Save the data to the marketplace_items table
-    try {
-      // First check if we already have data from today
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      const { data: existingData, error: checkError } = await supabase
-        .from('marketplace_items')
-        .select('id')
-        .gte('created_at', today.toISOString())
-        .limit(1)
-      
-      // Only insert new data if we don't have data from today
-      if (!existingData || existingData.length === 0) {
-        // Insert each item into the marketplace_items table
-        for (const item of data.items) {
-          await supabase
-            .from('marketplace_items')
-            .insert({
-              commodity_name: item.commodity_name,
-              category: item.commodity_name.toLowerCase().includes('apple') 
-                || item.commodity_name.toLowerCase().includes('banana')
-                || item.commodity_name.toLowerCase().includes('orange')
-                || item.commodity_name.toLowerCase().includes('grape')
-                || item.commodity_name.toLowerCase().includes('watermelon')
-                || item.commodity_name.toLowerCase().includes('papaya')
-                || item.commodity_name.toLowerCase().includes('mango')
-                || item.commodity_name.toLowerCase().includes('pineapple')
-                || item.commodity_name.toLowerCase().includes('pomegranate')
-                || item.commodity_name.toLowerCase().includes('strawberry') ? 'fruits' : 'vegetables',
-              modal_price: parseFloat(item.modal_price),
-              min_price: item.min_price ? parseFloat(item.min_price) : null,
-              max_price: item.max_price ? parseFloat(item.max_price) : null,
-              price_change_percentage: item.price_change_percentage,
-              market: item.market || 'National Average',
-              unit: item.unit || 'kg'
-            })
-        }
-        console.log('Successfully inserted new market data')
-      } else {
-        console.log('Market data for today already exists, skipping insertion')
-      }
-    } catch (dbError) {
-      console.error('Error saving to marketplace_items:', dbError.message)
-    }
-    
-    // Also cache the results as before
+    // Cache the results in Supabase
     const timestamp = new Date().toISOString()
     try {
       await supabase
@@ -75,6 +30,7 @@ Deno.serve(async (req) => {
           updated_at: timestamp
         })
     } catch (cacheError) {
+      // Log cache error but continue - this shouldn't block the response
       console.error('Error caching market prices:', cacheError.message)
     }
     
@@ -91,86 +47,46 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error generating market prices:', error.message)
 
-    // Try to fetch from the marketplace_items table
+    // Try to fetch cached data if available
     try {
-      const { data: marketItems, error: marketError } = await supabase
-        .from('marketplace_items')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20)
+      const { data: cachedData, error: cacheError } = await supabase
+        .from('market_prices_cache')
+        .select('data, updated_at')
+        .eq('id', 'latest')
+        .single()
         
-      if (marketError || !marketItems || marketItems.length === 0) {
-        throw new Error('No market data available')
+      if (cacheError || !cachedData) {
+        throw new Error('No cached data available')
       }
       
-      // Format the data to match the expected structure
-      const formattedData = {
-        items: marketItems.map(item => ({
-          id: item.id,
-          commodity_name: item.commodity_name,
-          modal_price: item.modal_price.toString(),
-          min_price: item.min_price ? item.min_price.toString() : null,
-          max_price: item.max_price ? item.max_price.toString() : null,
-          price_change_percentage: item.price_change_percentage,
-          market: item.market,
-          unit: item.unit
-        }))
-      }
-      
+      // Return cached data with flag
       return new Response(
         JSON.stringify({
-          data: formattedData,
-          updated_at: marketItems[0].updated_at,
+          data: cachedData.data,
+          updated_at: cachedData.updated_at,
+          is_cached: true
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200 
         }
       )
-    } catch (dbError) {
-      console.error('Error fetching from marketplace_items:', dbError.message)
+    } catch (cacheError) {
+      // If even the cache fails, return fresh generated data as a last resort
+      const freshData = generateMarketData()
+      const currentTime = new Date().toISOString()
       
-      // As a last resort, try to fetch cached data
-      try {
-        const { data: cachedData, error: cacheError } = await supabase
-          .from('market_prices_cache')
-          .select('data, updated_at')
-          .eq('id', 'latest')
-          .single()
-          
-        if (cacheError || !cachedData) {
-          throw new Error('No cached data available')
+      return new Response(
+        JSON.stringify({
+          data: freshData,
+          updated_at: currentTime,
+          is_fallback: true
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
         }
-        
-        // Return cached data with flag
-        return new Response(
-          JSON.stringify({
-            data: cachedData.data,
-            updated_at: cachedData.updated_at,
-            is_cached: true
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        )
-      } catch (cacheError) {
-        // If even the cache fails, return fresh generated data as a last resort
-        const freshData = generateMarketData()
-        const currentTime = new Date().toISOString()
-        
-        return new Response(
-          JSON.stringify({
-            data: freshData,
-            updated_at: currentTime,
-            is_fallback: true
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200 
-          }
-        )
-      }
+      )
     }
   }
 })
